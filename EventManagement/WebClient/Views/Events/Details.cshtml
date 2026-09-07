@@ -1,0 +1,442 @@
+@model WebClient.DTOs.Response.ReadEventDTO
+@using WebClient.DTOs.Response
+@{
+    ViewData["Title"] = "Event Details";
+    Layout = "_LayoutStaff";
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+    .card-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .event-header-title {
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 1rem;
+    }
+
+    .detail-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #1e293b;
+    }
+
+    #eventMap {
+        height: 300px;
+        width: 100%;
+        border-radius: 8px;
+        margin-top: 1rem;
+        border: 1px solid #e2e8f0;
+        z-index: 1;
+    }
+
+    .ticket-indicator {
+        width: 3px;
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 3px 0 0 3px;
+    }
+
+    .stat-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <a asp-action="Index" class="text-decoration-none text-muted mb-2 d-inline-block small fw-500">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to My Events
+    </a>
+
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+        <div class="flex-grow-1">
+            <h2 class="fw-bold text-dark mb-2">@Model.Title</h2>
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <span class="badge @(GetStatusClass(Model.Status)) px-3 py-2 rounded-pill">
+                    <i class="fa-solid fa-circle-info me-1"></i> @Model.Status
+                </span>
+                <span class="badge bg-primary text-white px-3 py-2 rounded-pill">
+                    <i class="fa-solid fa-tag me-1"></i> @Model.CategoryName
+                </span>
+                <span class="text-muted small">
+                    <i class="fa-solid fa-calendar me-1"></i> Created on @DateTime.Now.ToString("dd MMM yyyy")
+                </span>
+            </div>
+        </div>
+
+        <div class="btn-group-custom d-flex gap-2 flex-wrap">
+            <a asp-action="Update" asp-route-id="@Model.EventId" class="btn btn-sm btn-warning text-white fw-bold">
+                <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+            </a>
+
+            <a href="/events/validators/@Model.EventId" class="btn btn-sm btn-info text-white fw-bold">
+                <i class="fa-solid fa-user-check me-1"></i> Validators
+            </a>
+
+            @if (Model.ConversationId.HasValue && Model.ConversationId > 0)
+            {
+                <a href="/chats?conversationId=@Model.ConversationId" class="btn btn-sm btn-success text-white fw-bold" title="Chat with customers">
+                    <i class="fa-solid fa-comments me-1"></i> Chat
+                </a>
+            }
+
+            @if (Model.Status == "Draft" || Model.Status == "Rejected")
+            {
+                <a asp-action="Submit" asp-route-id="@Model.EventId" class="btn btn-sm btn-primary fw-bold">
+                    <i class="fa-solid fa-paper-plane me-1"></i> Submit
+                </a>
+            }
+
+            @if (Model.Status == "Published" || Model.Status == "Approved")
+            {
+                <a asp-action="Hide" asp-route-id="@Model.EventId" class="btn btn-sm btn-outline-secondary fw-bold"
+                   onclick="return confirm('Hide this event from public?')">
+                    <i class="fa-solid fa-eye-slash me-1"></i> Hide
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (Model.Status == "Rejected" && !string.IsNullOrEmpty(Model.RejectedReason))
+    {
+        <div class="alert alert-danger border-0 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-start gap-3">
+                <i class="fa-solid fa-triangle-exclamation fa-lg mt-1 flex-shrink-0"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">Rejection Reason</h6>
+                    <p class="mb-0 text-opacity-75">@Model.RejectedReason</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card-section">
+                <h5 class="fw-bold mb-3 text-primary">
+                    <i class="fa-solid fa-align-left me-2"></i>Description
+                </h5>
+                <p class="text-secondary mb-0" style="white-space: pre-line; line-height: 1.6;">
+                    @Model.Description
+                </p>
+            </div>
+
+            <div class="card-section">
+                <h5 class="fw-bold mb-3 text-primary">
+                    <i class="fa-solid fa-calendar-days me-2"></i>Date & Location
+                </h5>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="detail-label">Start Date & Time</div>
+                        <div class="detail-value">
+                            <i class="fa-regular fa-calendar-check me-2 text-primary"></i>
+                            @Model.StartDate.ToString("dd MMM yyyy, HH:mm")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">End Date & Time</div>
+                        <div class="detail-value">
+                            <i class="fa-regular fa-calendar-xmark me-2 text-danger"></i>
+                            @Model.EndDate.ToString("dd MMM yyyy, HH:mm")
+                        </div>
+                    </div>
+                    <div class="col-12">
+                     <div class="detail-label">Venue Location</div>
+                     <div class="detail-value mb-3">
+                         <i class="fa-solid fa-location-dot me-2 text-danger"></i>@Model.Location
+                     </div>
+                     <div id="eventMap" style="height: 300px; border-radius: 10px; margin-bottom: 10px;"></div>
+                     <small class="text-muted d-block mt-2">
+                         <i class="fa-solid fa-info-circle me-1"></i> Map position based on coordinates pinned by organizer.
+                     </small>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card-section">
+                <h5 class="fw-bold mb-4 text-primary">
+                    <i class="fa-solid fa-ticket me-2"></i>Ticket Configuration
+                </h5>
+
+                @if (Model.TicketTypes?.Any() != true)
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="fa-solid fa-ticket-simple fa-3x mb-2 opacity-50"></i>
+                        <p>No ticket types defined for this event.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="text-uppercase small text-muted">
+                                    <th>Type</th>
+                                    <th>Color</th>
+                                    <th>Price</th>
+                                    <th>Progress</th>
+                                    <th>Sale Period</th>
+                                    <th class="text-end">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var t in Model.TicketTypes!)
+                                {
+                                    var revenue = t.SoldQuantity * t.Price;
+                                    var percent = t.Quantity > 0 ? (t.SoldQuantity * 100 / t.Quantity) : 0;
+                                    <tr>
+                                        <td class="fw-bold">
+                                            <span>@t.TypeName</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="color-preview" style="width: 30px; height: 30px; background-color: @t.ColorCode; border-radius: 6px; border: 1px solid #e2e8f0;"></div>
+                                                <small class="text-muted">@t.ColorCode</small>
+                                            </div>
+                                        </td>
+                                        <td>@t.Price.ToString("N0") @Html.Raw("\u0111")</td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress flex-grow-1" style="height: 8px;">
+                                                    <div class="progress-bar" style="width: @percent%; background-color: @t.ColorCode"></div>
+                                                </div>
+                                                <small class="fw-bold text-nowrap">@t.SoldQuantity/@t.Quantity</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                @(t.SaleStartDate.HasValue ? t.SaleStartDate.Value.ToString("dd/MM/yyyy HH:mm") : "Anytime")
+                                                <br />
+                                                <i class="fa-solid fa-arrow-down fa-xs text-primary"></i>
+                                                <br />
+                                                @(t.SaleEndDate.HasValue ? t.SaleEndDate.Value.ToString("dd/MM/yyyy HH:mm") : "Until Event")
+                                            </small>
+                                        </td>
+                                        <td class="text-end fw-bold text-success">@revenue.ToString("N0") @Html.Raw("\u0111")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card-section p-0 overflow-hidden mb-4">
+                <div class="p-3 bg-light border-bottom small text-muted fw-bold">
+                    <i class="fa-solid fa-image me-2"></i>Event Poster
+                </div>
+                <img src="@(string.IsNullOrEmpty(Model.PosterUrl) ? "https://placehold.co/600x800?text=No+Poster" : Model.PosterUrl)"
+                     class="img-fluid w-100" style="object-fit: cover; min-height: 200px;" alt="Event Poster">
+            </div>
+
+            <div class="card-section text-white rounded-3 p-4 mb-4" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                <h6 class="fw-bold mb-4 text-uppercase small">
+                    <i class="fa-solid fa-chart-pie me-2"></i>Performance
+                </h6>
+
+                <div class="stat-item">
+                    <div class="detail-label text-white text-opacity-75">Total Revenue</div>
+                    <div class="detail-value text-white fs-4 fw-bold">
+                        @{
+                            long totalRevenue = 0;
+                            if (Model.TicketTypes != null && Model.TicketTypes.Count > 0)
+                            {
+                                foreach (var t in Model.TicketTypes)
+                                {
+                                    totalRevenue += (long)t.SoldQuantity * t.Price;
+                                }
+                            }
+                        }
+                        @totalRevenue.ToString("N0") @Html.Raw("\u0111")
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-6 stat-item">
+                        <div class="detail-label text-white text-opacity-75">Tickets Sold</div>
+                        <div class="detail-value text-white fs-5 fw-bold">
+                            @{
+                                int totalTickets = 0;
+                                if (Model.TicketTypes != null && Model.TicketTypes.Count > 0)
+                                {
+                                    foreach (var t in Model.TicketTypes)
+                                    {
+                                        totalTickets += t.SoldQuantity;
+                                    }
+                                }
+                            }
+                            @totalTickets
+                        </div>
+                    </div>
+                    <div class="col-6 stat-item">
+                        <div class="detail-label text-white text-opacity-75">Total Stock</div>
+                        <div class="detail-value text-white fs-5 fw-bold">
+                            @{
+                                int totalStock = 0;
+                                if (Model.TicketTypes != null && Model.TicketTypes.Count > 0)
+                                {
+                                    foreach (var t in Model.TicketTypes)
+                                    {
+                                        totalStock += t.Quantity;
+                                    }
+                                }
+                            }
+                            @totalStock
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-white btn-sm fw-bold w-100 rounded-pill mt-4 shadow-sm" onclick="exportRevenuReport()">
+                    <i class="fa-solid fa-download me-1"></i> Download Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusClass(string status) => status switch
+    {
+        "Approved" or "Published" => "bg-success",
+        "Pending" => "bg-warning text-dark",
+        "Rejected" => "bg-danger",
+        "Draft" => "bg-info text-dark",
+        _ => "bg-secondary"
+    };
+}
+
+@section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const organizerEventLat = @(Model.Latitude.HasValue ? Model.Latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null");
+        const organizerEventLng = @(Model.Longitude.HasValue ? Model.Longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null");
+        const organizerEventAddress = "@(Model.Location?.Replace("\"", "\\\"") ?? string.Empty)";
+        const organizerDefaultCenter = [10.776889, 106.700806];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initEventMap();
+        });
+
+        function initEventMap() {
+            try {
+                const mapContainer = document.getElementById('eventMap');
+                if (!mapContainer) return;
+
+                const hasSavedCoords = organizerEventLat !== null && organizerEventLng !== null;
+                const center = hasSavedCoords
+                    ? [parseFloat(organizerEventLat), parseFloat(organizerEventLng)]
+                    : organizerDefaultCenter;
+
+                const map = L.map(mapContainer).setView(center, hasSavedCoords ? 15 : 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+
+                if (hasSavedCoords) {
+                    L.marker(center).addTo(map).bindPopup('@Html.Raw(Model.Title)').openPopup();
+                } else {
+                    const defaultMarker = L.marker(center).addTo(map).bindPopup('@Html.Raw(Model.Title)').openPopup();
+                    if (organizerEventAddress && organizerEventAddress.trim().length > 0) {
+                        fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(organizerEventAddress))
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data && data.length > 0) {
+                                    var lat = parseFloat(data[0].lat);
+                                    var lon = parseFloat(data[0].lon);
+                                    map.setView([lat, lon], 15);
+                                    defaultMarker.setLatLng([lat, lon]);
+                                }
+                            }).catch(err => console.error(err));
+                    }
+                }
+            } catch (err) {
+                console.error('Error initializing map:', err);
+            }
+        }
+
+        function exportRevenuReport() {
+            const eventTitle = "@Html.Raw(Model.Title)";
+            const eventId = @Model.EventId;
+
+            const BOM = "\uFEFF";
+            let csv = BOM + "EVENT REVENUE & TICKET SALES REPORT\n";
+            csv += `Event Title: "${eventTitle.replace(/"/g, "'")}"\n`;
+            csv += `Event ID: ${eventId}\n`;
+            csv += `Exported Date: ${new Date().toLocaleString('vi-VN')}\n\n`;
+
+            csv += "Ticket Type,Unit Price (VNĐ),Quantity Sold,Total Stock,Sold Ratio,Total Revenue (VNĐ)\n";
+
+            const rows = document.querySelectorAll('tbody tr');
+            let totalRevenue = 0;
+            let totalSold = 0;
+            let totalStock = 0;
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 5) {
+                    const ticketType = cells[0].textContent.trim();
+                    const rawPrice = parseInt(cells[2].textContent.trim().replace(/[^\d]/g, '') || 0);
+                    const progress = cells[3].textContent.trim().match(/(\d+)\/(\d+)/);
+                    const rawRevenue = parseInt(cells[4].textContent.trim().replace(/[^\d]/g, '') || 0);
+
+                    if (progress) {
+                        const sold = parseInt(progress[1]);
+                        const total = parseInt(progress[2]);
+                        const percentage = total > 0 ? (sold * 100 / total).toFixed(1) : "0";
+
+                        const formattedPrice = new Intl.NumberFormat('vi-VN').format(rawPrice);
+                        const formattedRevenue = new Intl.NumberFormat('vi-VN').format(rawRevenue);
+
+                        csv += `"${ticketType.replace(/"/g, "'")}","${formattedPrice} VNĐ",${sold},${total},"${percentage}%","${formattedRevenue} VNĐ"\n`;
+
+                        totalRevenue += rawRevenue;
+                        totalSold += sold;
+                        totalStock += total;
+                    }
+                }
+            });
+
+            const formattedTotalRev = new Intl.NumberFormat('vi-VN').format(totalRevenue);
+            csv += "\nSUMMARY METRICS\n";
+            csv += `Total Revenue,"${formattedTotalRev} VNĐ"\n`;
+            csv += `Total Tickets Sold,${totalSold}\n`;
+            csv += `Total Stock Capacity,${totalStock}\n`;
+
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
+            element.setAttribute('download', `Revenue_Report_Event${eventId}_${new Date().toISOString().split('T')[0]}.csv`);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+    </script>
+}

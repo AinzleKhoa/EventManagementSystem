@@ -1,0 +1,206 @@
+﻿@model List<WebClient.DTOs.Response.ReadOrderDTO>
+
+@{
+    ViewData["Title"] = "My Orders";
+    Layout = "_LayoutProfile";
+}
+
+<style>
+    .order-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.1) !important;
+        }
+
+    .status-indicator {
+        width: 4px;
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-top-left-radius: inherit;
+        border-bottom-left-radius: inherit;
+        z-index: 1;
+    }
+
+    .order-img-container {
+        padding: 0.5rem 0 0.5rem 0.5rem;
+    }
+
+    /* Custom style cho bộ lọc */
+    .filter-btn {
+        color: #6c757d;
+        font-weight: 500;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+        .filter-btn:hover {
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+
+        .filter-btn.active {
+            background-color: #0d6efd !important;
+            color: #fff !important;
+            box-shadow: 0 0.125rem 0.25rem rgba(13, 110, 253, 0.25);
+        }
+</style>
+
+<div class="card shadow-sm border-0 rounded-4 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">My Orders</h4>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="nav nav-pills mb-4 gap-2" id="orderFilters">
+            <button class="nav-link filter-btn active rounded-pill px-4 py-2" data-filter="All">All</button>
+            <button class="nav-link filter-btn rounded-pill px-4 py-2" data-filter="Pending">Pending</button>
+            <button class="nav-link filter-btn rounded-pill px-4 py-2" data-filter="Paid">Paid</button>
+            <button class="nav-link filter-btn rounded-pill px-4 py-2" data-filter="Cancelled">Cancelled</button>
+        </div>
+
+        <div id="ordersContainer">
+            @foreach (var order in Model)
+            {
+                var statusColor = order.Status == "Paid" || order.Status == "Completed" ? "success" :
+                order.Status == "Pending" ? "warning" : "danger";
+
+                <div class="card order-card mb-4 border-0 shadow-sm rounded-4 position-relative filter-item"
+                     data-status="@order.Status">
+
+                    <div class="status-indicator bg-@statusColor"></div>
+
+                    <div class="row g-0 ps-2">
+                        <div class="col-md-3 order-img-container">
+                            <img src="@order.PosterUrl"
+                                 class="img-fluid rounded-3 h-100 w-100 object-fit-cover shadow-sm"
+                                 style="min-height: 140px; max-height: 160px;"
+                                 alt="@order.EventName">
+                        </div>
+
+                        <div class="col-md-9">
+                            <div class="card-body p-3 d-flex flex-column h-100">
+
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="fw-bold mb-1 text-dark">@order.EventName</h6>
+
+                                        <div class="text-muted small d-flex align-items-center gap-2" style="font-size: 0.8rem;">
+                                            <span><i class="bi bi-hash"></i> Order #@order.OrderId</span>
+                                            <span>•</span>
+                                            <span>
+                                                <i class="bi bi-receipt"></i> Ordered at:
+                                                <strong>@order.OrderDate?.ToString("MMM dd, yyyy HH:mm")</strong>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <span class="badge bg-@(statusColor)-subtle text-@statusColor px-2 py-1 rounded-pill fw-semibold border border-@(statusColor)-subtle"
+                                          style="font-size: 0.75rem;">
+                                        <i class="bi bi-circle-fill me-1" style="font-size: 0.35rem; vertical-align: middle;"></i>
+                                        @order.Status
+                                    </span>
+                                </div>
+
+                                <div class="bg-light rounded-3 p-3 mb-3" style="font-size: 0.9rem;">
+                                    <div class="text-dark">
+                                        <i class="bi bi-calendar-event text-primary me-2"></i>
+                                        <strong>Event Date:</strong>
+                                    </div>
+
+                                    <div class="ms-4 mt-1 text-muted">
+                                        @order.StartDate?.ToString("MMM dd, yyyy HH:mm") - @order.EndDate?.ToString("MMM dd, yyyy HH:mm")
+                                    </div>
+                                </div>
+
+                                <div class="mt-auto d-flex justify-content-between align-items-end">
+                                    <div>
+                                        @if ((order.DiscountAmount ?? 0) > 0)
+                                        {
+                                            <div class="text-muted mb-1" style="font-size: 0.8rem;">
+                                                Subtotal: <s>@order.TotalAmount.ToString("N0") đ</s>
+                                                <span class="badge bg-danger ms-2">
+                                                    -@((order.DiscountAmount ?? 0).ToString("N0")) đ
+                                                </span>
+                                            </div>
+                                        }
+
+                                        <div class="fw-bold text-primary" style="font-size: 1.2rem;">
+                                            @order.FinalAmount.ToString("N0") đ
+                                        </div>
+                                    </div>
+
+                                    <a asp-action="OrderDetails" asp-route-id="@order.OrderId" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm"
+                                       style="font-size: 0.85rem;">
+                                        View Details
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div id="noResultsState" class="text-center text-muted py-5" style="display: none;">
+            <i class="bi bi-search fs-1 d-block mb-3 text-secondary"></i>
+            <h5>No orders found</h5>
+            <p class="small">There are no orders matching this status.</p>
+        </div>
+    }
+    else
+    {
+        <div class="text-center text-muted py-5 mt-4">
+            <i class="bi bi-ticket-perforated fs-1 d-block mb-3"></i>
+            <h5>You don't have any orders yet.</h5>
+            <a href="/" class="btn btn-outline-primary rounded-pill mt-3 px-4">Browse Events</a>
+        </div>
+    }
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const orderCards = document.querySelectorAll('.filter-item');
+        const noResultsState = document.getElementById('noResultsState');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                // 1. Gỡ class 'active' khỏi tất cả các nút
+                filterBtns.forEach(b => b.classList.remove('active'));
+
+                // 2. Thêm class 'active' vào nút vừa được click
+                this.classList.add('active');
+
+                // 3. Lấy giá trị của bộ lọc (All, Pending, Paid...)
+                const filterValue = this.getAttribute('data-filter');
+                let visibleCount = 0;
+
+                // 4. Lặp qua từng order card để kiểm tra xem có khớp không
+                orderCards.forEach(card => {
+                    const cardStatus = card.getAttribute('data-status');
+
+                    if (filterValue === 'All' || cardStatus === filterValue) {
+                        card.style.display = 'block'; // Hiện lên
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none'; // Ẩn đi
+                    }
+                });
+
+                // 5. Nếu không có cái nào hiển thị, bật khung "No results found"
+                if (visibleCount === 0) {
+                    noResultsState.style.display = 'block';
+                } else {
+                    noResultsState.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>

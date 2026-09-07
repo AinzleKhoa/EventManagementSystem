@@ -1,0 +1,841 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7020
+        }
+      ],
+      "UpstreamPathTemplate": "/category-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7020
+        }
+      ],
+      "UpstreamPathTemplate": "/category-gateway/{controller}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7243
+        }
+      ],
+      "UpstreamPathTemplate": "/authentication-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7243
+        }
+      ],
+      "UpstreamPathTemplate": "/authentication-gateway/{controller}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7289
+        }
+      ],
+      "UpstreamPathTemplate": "/event-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{action}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7289
+        }
+      ],
+      "UpstreamPathTemplate": "/event-gateway/{controller}/{action}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7289
+        }
+      ],
+      "UpstreamPathTemplate": "/event-gateway/{controller}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/Tickets/{code}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7108
+        }
+      ],
+      "UpstreamPathTemplate": "/booking-gateway/Tickets/{code}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Orders/event/{eventId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7108
+        }
+      ],
+      "UpstreamPathTemplate": "/booking-gateway/orders/event/{eventId}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/Orders/check-paid-ticket/{eventId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7108
+        }
+      ],
+      "UpstreamPathTemplate": "/booking-gateway/orders/check-paid-ticket/{eventId}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{action}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7108
+        }
+      ],
+      "UpstreamPathTemplate": "/booking-gateway/{controller}/{action}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7108
+        }
+      ],
+      "UpstreamPathTemplate": "/booking-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7108
+        }
+      ],
+      "UpstreamPathTemplate": "/booking-gateway/{controller}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/reviewHub/negotiate",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7182
+        }
+      ],
+      "UpstreamPathTemplate": "/social-gateway/reviewHub/negotiate",
+      "UpstreamHttpMethod": [
+        "Post",
+        "Options"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/reviewHub",
+      "DownstreamScheme": "wss",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7182
+        }
+      ],
+      "UpstreamPathTemplate": "/social-gateway/reviewHub"
+    },
+    {
+      "DownstreamPathTemplate": "/reviewHub/{everything}",
+      "DownstreamScheme": "wss",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7182
+        }
+      ],
+      "UpstreamPathTemplate": "/social-gateway/reviewHub/{everything}"
+    },
+    {
+      "DownstreamPathTemplate": "/odata/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7182
+        }
+      ],
+      "UpstreamPathTemplate": "/social-gateway/odata/{everything}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete",
+        "Patch"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}/{action}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7182
+        }
+      ],
+      "UpstreamPathTemplate": "/social-gateway/{controller}/{id}/{action}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete",
+        "Patch"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7182
+        }
+      ],
+      "UpstreamPathTemplate": "/social-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7182
+        }
+      ],
+      "UpstreamPathTemplate": "/social-gateway/{controller}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7227
+        }
+      ],
+      "UpstreamPathTemplate": "/voucher-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7227
+        }
+      ],
+      "UpstreamPathTemplate": "/voucher-gateway/{controller}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}/{action}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7192
+        }
+      ],
+      "UpstreamPathTemplate": "/withdrawal-gateway/{controller}/{id}/{action}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete",
+        "Patch"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7192
+        }
+      ],
+      "UpstreamPathTemplate": "/withdrawal-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete",
+        "Patch"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7192
+        }
+      ],
+      "UpstreamPathTemplate": "/withdrawal-gateway/{controller}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete",
+        "Patch"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{conversationId}/participants/{userId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7148
+        }
+      ],
+      "UpstreamPathTemplate": "/chat-gateway/{controller}/{conversationId}/participants/{userId}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/user/{userId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7148
+        }
+      ],
+      "UpstreamPathTemplate": "/chat-gateway/{controller}/user/{userId}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/event/{eventId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7148
+        }
+      ],
+      "UpstreamPathTemplate": "/chat-gateway/{controller}/event/{eventId}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/conversation/{conversationId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7148
+        }
+      ],
+      "UpstreamPathTemplate": "/chat-gateway/{controller}/conversation/{conversationId}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/test/{testId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7148
+        }
+      ],
+      "UpstreamPathTemplate": "/chat-gateway/{controller}/test/{testId}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{action}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7148
+        }
+      ],
+      "UpstreamPathTemplate": "/chat-gateway/{controller}/{action}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7148
+        }
+      ],
+      "UpstreamPathTemplate": "/chat-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7148
+        }
+      ],
+      "UpstreamPathTemplate": "/chat-gateway/{controller}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}/{action}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/notification-gateway/{controller}/{id}/{action}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/notification-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/notification-gateway/{controller}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/dashboardHub/negotiate",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/notification-gateway/dashboardHub/negotiate",
+      "UpstreamHttpMethod": [
+        "Post",
+        "Options"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/dashboardHub",
+      "DownstreamScheme": "wss",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/notification-gateway/dashboardHub"
+    },
+    {
+      "DownstreamPathTemplate": "/dashboardHub/{everything}",
+      "DownstreamScheme": "wss",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/notification-gateway/dashboardHub/{everything}",
+      "EnableWebSocket": true
+    },
+    {
+      "DownstreamPathTemplate": "/notificationHub/negotiate",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/notification-gateway/notificationHub/negotiate",
+      "UpstreamHttpMethod": [
+        "Post",
+        "Options"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/notificationHub/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/notification-gateway/notificationHub/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/notificationHub",
+      "DownstreamScheme": "wss",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7197
+        }
+      ],
+      "UpstreamPathTemplate": "/notification-gateway/notificationHub",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7299
+        }
+      ],
+      "UpstreamPathTemplate": "/chatbot-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7299
+        }
+      ],
+      "UpstreamPathTemplate": "/chatbot-gateway/{controller}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put",
+        "Delete"
+      ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:7158",
+    "HttpHandlerOptions": {
+      "AllowAutoRedirect": false,
+      "UseCookieContainer": false,
+      "UseTracing": false,
+      "UseProxy": true,
+      "DangerousAcceptAnyServerCertificateValidator": true
+    }
+  }
+}

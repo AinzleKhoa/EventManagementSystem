@@ -1,0 +1,127 @@
+﻿@using WebClient.DTOs.Response
+@model IEnumerable<WebClient.ViewModel.WishlistItemViewModel>
+
+@{
+	ViewData["Title"] = "My Wishlist";
+	Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/wishlist/wishlist_style.css" />
+
+<div class="container py-5 mt-5">
+	<div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3">
+		<div>
+			<h2 class="fw-bold mb-1"><i class="fa-solid fa-heart text-danger me-2"></i>My Wishlist</h2>
+		</div>
+		<div>
+			<span class="badge bg-primary rounded-pill px-3 py-2 fs-6">
+				<span id="wishlist-count">@(Model != null ? Model.Count() : 0)</span> saved
+			</span>
+		</div>
+	</div>
+
+	<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4" id="wishlist-container">
+		@if (Model != null && Model.Any())
+		{
+			foreach (var item in Model)
+			{
+				var imgUrl = string.IsNullOrEmpty(item.Event.PosterUrl) ? "https://placehold.co/600x400?text=Event" : item.Event.PosterUrl;
+
+				<div class="col" id="wishlist-item-@item.EventId">
+					<div class="card event-card h-100">
+						<div class="card-img-wrapper">
+							<img src="@imgUrl" class="card-img-top" alt="@item.Event.Title">
+							<div class="date-badge">
+								<span class="month">@item.Event.StartDate.ToString("MMM").ToUpper()</span>
+								<span class="day">@item.Event.StartDate.ToString("dd")</span>
+							</div>
+
+							<button class="btn-wishlist" onclick="removeFromWishlist(@item.EventId, this)" title="Remove from Wishlist">
+								<i class="fa-solid fa-heart"></i>
+							</button>
+						</div>
+
+						<div class="card-body">
+							<a asp-action="EventDetails" asp-controller="Home" asp-route-id="@item.EventId" class="event-title">
+								@item.Event.Title
+							</a>
+							<div class="mt-2">
+								<div class="event-meta">
+									<i class="fa-regular fa-clock text-primary"></i>
+									@item.Event.StartDate.ToString("HH:mm")
+								</div>
+								<div class="event-meta">
+									<i class="fa-solid fa-location-dot text-danger"></i>
+									@item.Event.Location
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+		}
+		else
+		{
+			<div class="col-12 text-center py-5" id="empty-state">
+				<div class="text-muted">
+					<i class="fa-regular fa-heart fa-4x mb-3 text-secondary opacity-25"></i>
+					<h4 class="fw-bold text-dark">Your wishlist is empty</h4>
+					<p>Looks like you haven't saved any events yet. Discover amazing events and add them here!</p>
+					<a href="@Url.Action("Search", "Home")" class="btn btn-primary rounded-pill px-4 py-2 mt-2">
+						Explore Events
+					</a>
+				</div>
+			</div>
+		}
+	</div>
+</div>
+
+@section Scripts {
+	<script src="~/js/common/toast.js"></script>
+
+	<script>
+		async function removeFromWishlist(eventId, btnElement) {
+			try {
+				const response = await fetch('/Wishlist/ToggleWishlist', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ eventId: eventId, isAdding: false })
+				});
+
+				const data = await response.json();
+
+				if (data.success) {
+					const colElement = document.getElementById(`wishlist-item-${eventId}`);
+					colElement.style.opacity = '0';
+					setTimeout(() => {
+						colElement.remove();
+
+						let countEl = document.getElementById('wishlist-count');
+						let currentCount = parseInt(countEl.innerText);
+						countEl.innerText = Math.max(0, currentCount - 1);
+
+						if (currentCount - 1 === 0) {
+							document.getElementById('wishlist-container').innerHTML = `
+								<div class="col-12 text-center py-5" id="empty-state">
+									<div class="text-muted">
+										<i class="fa-regular fa-heart fa-4x mb-3 text-secondary opacity-25"></i>
+										<h4 class="fw-bold text-dark">Your wishlist is empty</h4>
+										<p>Looks like you haven't saved any events yet. Discover amazing events and add them here!</p>
+										<a href="@Url.Action("Search", "Home")" class="btn btn-primary rounded-pill px-4 py-2 mt-2">
+											Explore Events
+										</a>
+									</div>
+								</div>`;
+						}
+					}, 300);
+
+				} else {
+					showToast("error", "Failed to remove, please try again.");
+				}
+			} catch (error) {
+				console.error("Error:", error);
+				showToast("error", "Failed to connect to server.");
+			}
+		}
+	</script>
+}

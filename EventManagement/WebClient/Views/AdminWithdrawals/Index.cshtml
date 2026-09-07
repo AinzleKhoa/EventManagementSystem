@@ -1,0 +1,209 @@
+@model WebClient.DTOs.Response.PaginatedResultDTO<WebClient.DTOs.Response.ReadWithdrawalDTO>
+@{
+    ViewData["Title"] = "Withdrawal Management";
+    Layout = "_LayoutAdmin";
+    string searchTerm  = ViewData["SearchTerm"]?.ToString() ?? "";
+    string statusFilter = ViewData["Status"]?.ToString() ?? "";
+    string sortBy      = ViewData["SortBy"]?.ToString() ?? "RequestedAt";
+    string sortOrder   = ViewData["SortOrder"]?.ToString() ?? "desc";
+
+    string GetSortIcon(string col)
+    {
+        if (sortBy != col) return "fa-sort";
+        return sortOrder == "asc" ? "fa-sort-up" : "fa-sort-down";
+    }
+    string NextOrder(string col) => (sortBy == col && sortOrder == "asc") ? "desc" : "asc";
+}
+
+<link rel="stylesheet" href="~/css/common/list_style.css" />
+<link rel="stylesheet" href="~/css/common/search_div.css" />
+<link rel="stylesheet" href="~/css/common/dashboard_paging.css" />
+<link rel="stylesheet" href="~/css/common/page_header_dashboard.css" />
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h3 class="mb-0">
+            <i class="fa-solid fa-money-bill-transfer me-2"></i>
+            Withdrawal Management
+            <span class="stats-badge">@Model.TotalCount requests</span>
+        </h3>
+    </div>
+</div>
+
+<form method="get" asp-action="Index" class="search-card">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> Search
+            </label>
+            <input type="text" name="searchTerm" value="@searchTerm" class="form-control"
+                   placeholder="Bank name, account number..." style="border-radius:10px;padding:0.65rem 1rem;">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-filter me-1"></i> Status
+            </label>
+            <select name="status" class="form-select" style="border-radius:10px;padding:0.65rem 1rem;">
+                <option value="">All Status</option>
+                <option value="Pending"  selected="@(statusFilter == "Pending")">⏳ Pending</option>
+                <option value="Approved" selected="@(statusFilter == "Approved")">✓ Approved</option>
+                <option value="Rejected" selected="@(statusFilter == "Rejected")">✕ Rejected</option>
+            </select>
+        </div>
+        <div class="col-md-5">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-dashboard-primary flex-grow-1">
+                    <i class="fa-solid fa-search me-2"></i> Search
+                </button>
+                <a asp-action="Index" class="btn btn-reset" title="Reset filters">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th class="sortable-header"
+                        onclick="location.href='?searchTerm=@searchTerm&status=@statusFilter&sortBy=BankName&sortOrder=@NextOrder("BankName")&pageNumber=1'">
+                        Bank <i class="fa-solid @GetSortIcon("BankName")"></i>
+                    </th>
+                    <th>Account</th>
+                    <th class="sortable-header"
+                        onclick="location.href='?searchTerm=@searchTerm&status=@statusFilter&sortBy=Amount&sortOrder=@NextOrder("Amount")&pageNumber=1'">
+                        Amount <i class="fa-solid @GetSortIcon("Amount")"></i>
+                    </th>
+                    <th class="sortable-header"
+                        onclick="location.href='?searchTerm=@searchTerm&status=@statusFilter&sortBy=Status&sortOrder=@NextOrder("Status")&pageNumber=1'">
+                        Status <i class="fa-solid @GetSortIcon("Status")"></i>
+                    </th>
+                    <th class="sortable-header"
+                        onclick="location.href='?searchTerm=@searchTerm&status=@statusFilter&sortBy=RequestedAt&sortOrder=@NextOrder("RequestedAt")&pageNumber=1'">
+                        Requested At <i class="fa-solid @GetSortIcon("RequestedAt")"></i>
+                    </th>
+                    <th>Organizer</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    @foreach (var w in Model.Items)
+                    {
+                        <tr>
+                            <td>@w.WithdrawalId</td>
+                            <td class="fw-bold">@w.BankName</td>
+                            <td>
+                                <span class="fw-semibold">@w.BankAccountNumber</span><br />
+                                <small class="text-muted">@w.BankAccountName</small>
+                            </td>
+                            <td class="fw-bold text-primary">@w.Amount.ToString("N0") ₫</td>
+                            <td>
+                                @{
+                                    var badge = w.Status switch
+                                    {
+                                        "Approved" => "bg-success",
+                                        "Rejected" => "bg-danger",
+                                        _          => "bg-warning text-dark"
+                                    };
+                                }
+                                <span class="badge @badge">@w.Status</span>
+                                @if (w.Status == "Rejected" && !string.IsNullOrEmpty(w.RejectReason))
+                                {
+                                    <br /><small class="text-danger">@w.RejectReason</small>
+                                }
+                            </td>
+                            <td class="text-nowrap small text-muted">@w.RequestedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <span class="fw-semibold text-dark">@(string.IsNullOrEmpty(w.OrganizerName) ? $"User #{w.OrganizerId}" : w.OrganizerName)</span><br />
+                                <small class="text-muted">#@w.OrganizerId</small>
+                            </td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn" type="button" data-bs-toggle="dropdown">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
+                                        <li>
+                                            <a class="dropdown-item" asp-action="Details" asp-route-id="@w.WithdrawalId">
+                                                <i class="fa-solid fa-eye text-secondary me-1"></i> View Details
+                                            </a>
+                                        </li>
+                                        @if (w.Status == "Pending")
+                                        {
+                                            <li>
+                                                <a href="#"
+                                                   class="dropdown-item text-success"
+                                                   onclick="confirmAction({
+                                                       title: 'Approve withdrawal',
+                                                       message: 'Are you sure to approve this request?',
+                                                       url: '/AdminWithdrawals/Approve',
+                                                       id: '@w.WithdrawalId',
+                                                       confirmText: 'Approve',
+                                                       type: 'success'
+                                                   })">
+                                                    <i class="fa-solid fa-check text-success me-1"></i> Approve
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" asp-action="Reject" asp-route-id="@w.WithdrawalId">
+                                                    <i class="fa-solid fa-xmark text-danger me-1"></i> Reject
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fa-solid fa-inbox fa-2x mb-2 d-block"></i>
+                            No withdrawal requests found.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+@if (Model.TotalPages > 1)
+{
+    <nav class="d-flex justify-content-center mt-3">
+        <ul class="pagination">
+            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                <a class="page-link" href="?searchTerm=@searchTerm&status=@statusFilter&sortBy=@sortBy&sortOrder=@sortOrder&pageNumber=@(Model.PageNumber - 1)">«</a>
+            </li>
+            @for (int p = 1; p <= Model.TotalPages; p++)
+            {
+                <li class="page-item @(p == Model.PageNumber ? "active" : "")">
+                    <a class="page-link" href="?searchTerm=@searchTerm&status=@statusFilter&sortBy=@sortBy&sortOrder=@sortOrder&pageNumber=@p">@p</a>
+                </li>
+            }
+            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                <a class="page-link" href="?searchTerm=@searchTerm&status=@statusFilter&sortBy=@sortBy&sortOrder=@sortOrder&pageNumber=@(Model.PageNumber + 1)">»</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+@if (TempData["ToastMessage"] != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showToast("@TempData["ToastMessage"]", "@TempData["ToastType"]");
+        });
+    </script>
+}
+<script src="~/js/toast.js"></script>
+<script src="~/js/common/confirm_popup.js"></script>

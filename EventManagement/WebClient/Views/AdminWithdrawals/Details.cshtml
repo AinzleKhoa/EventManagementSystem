@@ -1,0 +1,121 @@
+@model WebClient.DTOs.Response.ReadWithdrawalDTO
+@{
+    ViewData["Title"] = "Withdrawal Request Details";
+    Layout = "_LayoutAdmin";
+
+    var statusBadge = Model.Status switch
+    {
+        "Approved" => ("bg-success", "fa-circle-check"),
+        "Rejected" => ("bg-danger",  "fa-circle-xmark"),
+        _          => ("bg-warning text-dark", "fa-clock")
+    };
+}
+
+<link rel="stylesheet" href="~/css/common/page_header_dashboard.css" />
+
+<div class="mb-4">
+    <a asp-action="Index" class="text-decoration-none text-muted fw-medium d-inline-block">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Withdrawal Management
+    </a>
+</div>
+
+<div class="card-section" style="background:white;border-radius:16px;padding:2rem;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);max-width:680px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0">
+            <i class="fa-solid fa-money-bill-transfer me-2 text-primary"></i>
+            Withdrawal Request #@Model.WithdrawalId
+        </h5>
+        <span class="badge @statusBadge.Item1 fs-6 px-3 py-2">
+            <i class="fa-solid @statusBadge.Item2 me-1"></i>@Model.Status
+        </span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                <small class="text-muted d-block mb-1"><i class="fa-solid fa-user me-1"></i>Organizer ID</small>
+                <strong>#@Model.OrganizerId</strong>
+            </div>
+        </div>
+        @if (Model.EventId.HasValue)
+        {
+            <div class="col-md-6">
+                <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                    <small class="text-muted d-block mb-1"><i class="fa-solid fa-calendar me-1"></i>Event ID</small>
+                    <strong>#@Model.EventId</strong>
+                </div>
+            </div>
+        }
+        <div class="col-md-6">
+            <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                <small class="text-muted d-block mb-1"><i class="fa-solid fa-coins me-1"></i>Amount</small>
+                <strong class="text-primary fs-5">@Model.Amount.ToString("N0") ₫</strong>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                <small class="text-muted d-block mb-1"><i class="fa-solid fa-building-columns me-1"></i>Bank Name</small>
+                <strong>@Model.BankName</strong>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                <small class="text-muted d-block mb-1"><i class="fa-solid fa-credit-card me-1"></i>Account Number</small>
+                <strong>@Model.BankAccountNumber</strong>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                <small class="text-muted d-block mb-1"><i class="fa-solid fa-id-card me-1"></i>Account Holder</small>
+                <strong>@Model.BankAccountName</strong>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                <small class="text-muted d-block mb-1"><i class="fa-regular fa-clock me-1"></i>Requested At</small>
+                <strong>@Model.RequestedAt.ToString("dd/MM/yyyy HH:mm")</strong>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                <small class="text-muted d-block mb-1"><i class="fa-regular fa-calendar-check me-1"></i>Processed At</small>
+                <strong>@(Model.ProcessedAt?.ToString("dd/MM/yyyy HH:mm") ?? "—")</strong>
+            </div>
+        </div>
+        @if (Model.Status == "Rejected" && !string.IsNullOrEmpty(Model.RejectReason))
+        {
+            <div class="col-12">
+                <div class="p-3 rounded" style="background:#fff5f5;border:1px solid #fed7d7;">
+                    <small class="text-danger d-block mb-1 fw-semibold"><i class="fa-solid fa-circle-xmark me-1"></i>Reject Reason</small>
+                    <span>@Model.RejectReason</span>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Model.Status == "Pending")
+    {
+        <hr class="my-4" />
+        <div class="d-flex gap-2">
+            <form asp-action="Approve" asp-route-id="@Model.WithdrawalId" method="post"
+                  onsubmit="return confirm('Approve this withdrawal request?')">
+                <button type="submit" class="btn btn-success">
+                    <i class="fa-solid fa-check me-1"></i> Approve
+                </button>
+            </form>
+            <a asp-action="Reject" asp-route-id="@Model.WithdrawalId" class="btn btn-danger">
+                <i class="fa-solid fa-xmark me-1"></i> Reject
+            </a>
+        </div>
+    }
+</div>
+
+@if (TempData["ToastMessage"] != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showToast("@TempData["ToastMessage"]", "@TempData["ToastType"]");
+        });
+    </script>
+}
+<script src="~/js/toast.js"></script>

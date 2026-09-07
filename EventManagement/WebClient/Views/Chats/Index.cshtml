@@ -1,0 +1,75 @@
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Event Chat";
+
+    var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+    var layout = userRole?.ToLower() == "organizer" ? "_LayoutStaff" : "_Layout";
+    Layout = layout;
+
+    var currentUserId = User.FindFirst("sub")?.Value
+        ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        ?? User.FindFirst("UserId")?.Value;
+
+    var currentUsername = User.Identity?.Name ?? "Anonymous";
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+    <script src="~/js/chat-signalr.js"></script>
+    <script src="~/js/chat-ui.js"></script>
+}
+
+@{
+    var tokenValue = User.FindFirst("AccessToken")?.Value 
+                  ?? User.Claims.FirstOrDefault(c => c.Type.Equals("AccessToken", StringComparison.OrdinalIgnoreCase) 
+                                                  || c.Type.Equals("token", StringComparison.OrdinalIgnoreCase) 
+                                                  || c.Type.Equals("jwt", StringComparison.OrdinalIgnoreCase))?.Value;
+}
+<input type="hidden" id="currentUserId" value="@currentUserId" />
+<input type="hidden" id="currentUsername" value="@currentUsername" />
+<input type="hidden" id="accessToken" value="@tokenValue" />
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="~/css/chat.css" />
+
+<div class="container-fluid">
+    <div class="mb-3">
+        <h3 class="fw-bold mb-1">
+            <i class="fas fa-comments me-2"></i>Event Discussions
+        </h3>
+        <p class="text-muted mb-0">Chat with other event participants and collaborators</p>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="conversations-panel">
+            <div class="conversations-header">
+                <h6 class="mb-0">
+                    <i class="fa-solid fa-list me-2"></i>Conversations
+                </h6>
+            </div>
+            <div id="conversationsList" class="conversations-list">
+                <div class="no-conversations">
+                    <div>
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>No conversations yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="messages-panel" id="messagesPanel">
+            <div class="empty-state">
+                <div>
+                    <i class="fas fa-comments fa-3x mb-3" style="color: #cbd5e1;"></i>
+                    <p>Select a conversation to start chatting</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Chats: Chat interface loaded');
+    });
+</script>

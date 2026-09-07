@@ -1,0 +1,80 @@
+@baseUrl = https://localhost:7001/api
+@groupId = 1
+@messageId = 1
+@eventId = 1
+
+### 1. CREATE CHAT GROUP
+POST {{baseUrl}}/chatgroups/create
+Content-Type: application/json
+
+{
+  "groupName": "Tech Conference 2024 - Main Chat",
+  "eventId": 1,
+  "organizerEmail": "organizer@techconf.com",
+  "description": "Chat group for Tech Conference 2024 attendees"
+}
+
+### 2. GET CHAT GROUP BY ID
+GET {{baseUrl}}/chatgroups/{{groupId}}
+
+### 3. GET ALL GROUPS FOR EVENT
+GET {{baseUrl}}/chatgroups/event/{{eventId}}
+
+### 4. UPDATE CHAT GROUP
+PUT {{baseUrl}}/chatgroups/{{groupId}}
+Content-Type: application/json
+
+{
+  "groupName": "Tech Conference 2024 - Updated",
+  "description": "Updated description"
+}
+
+### 5. GET GROUP MEMBERS
+GET {{baseUrl}}/chatgroups/{{groupId}}/members
+
+### 6. ADD MEMBER TO GROUP
+POST {{baseUrl}}/chatgroups/{{groupId}}/members
+Content-Type: application/json
+
+{
+  "memberEmail": "attendee@example.com"
+}
+
+### 7. ASSIGN ADMIN ROLE
+PUT {{baseUrl}}/chatgroups/{{groupId}}/members/admin
+Content-Type: application/json
+
+{
+  "memberEmail": "attendee@example.com",
+  "isAdmin": true
+}
+
+### 8. REMOVE MEMBER FROM GROUP
+DELETE {{baseUrl}}/chatgroups/{{groupId}}/members/attendee@example.com
+
+### 9. SEND MESSAGE
+POST {{baseUrl}}/chatmessages/send
+Content-Type: application/json
+
+{
+  "chatGroupId": {{groupId}},
+  "senderEmail": "attendee@example.com",
+  "messageContent": "Hello everyone! This is my first message in the chat! 👋"
+}
+
+### 10. GET MESSAGES FROM GROUP (Paginated)
+GET {{baseUrl}}/chatmessages/group/{{groupId}}?pageNumber=1&pageSize=50
+
+### 11. EDIT MESSAGE
+PUT {{baseUrl}}/chatmessages/{{messageId}}
+Content-Type: application/json
+
+{
+  "messageContent": "This message has been edited!"
+}
+
+### 12. DELETE MESSAGE
+DELETE {{baseUrl}}/chatmessages/{{messageId}}
+
+### 13. DELETE CHAT GROUP
+DELETE {{baseUrl}}/chatgroups/{{groupId}}

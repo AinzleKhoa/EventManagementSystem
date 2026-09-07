@@ -1,0 +1,367 @@
+﻿@model WebClient.DTOs.Response.PaginatedResultDTO<WebClient.DTOs.Response.ReadUserDTO>
+@{
+    ViewData["Title"] = "Users";
+    Layout = "_layoutAdmin";
+}
+
+<link rel="stylesheet" href="~/css/users/index_style.css" />
+<link rel="stylesheet" href="~/css/common/list_style.css" />
+<link rel="stylesheet" href="~/css/common/search_div.css" />
+<link rel="stylesheet" href="~/css/common/dashboard_paging.css" />
+<link rel="stylesheet" href="~/css/common/page_header_dashboard.css" />
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h3 class="mb-0">
+            <i class="fa-solid fa-users-gear me-2"></i>
+            User Management
+            <span class="stats-badge">@Model.TotalCount Users</span>
+        </h3>
+    </div>
+    <a asp-action="Create" class="btn-dashboard-primary">
+        <i class="fa-solid fa-user-plus me-2"></i> New User
+    </a>
+</div>
+
+<form method="get" asp-action="Index" class="search-card">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> Search
+            </label>
+            <input type="text"
+                   name="searchTerm"
+                   value="@ViewData["SearchTerm"]"
+                   class="form-control"
+                   placeholder="Search by name, email, phone..."
+                   style="border-radius: 10px; padding: 0.65rem 1rem;">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-user-tag me-1"></i> Role
+            </label>
+            <select name="roleId" class="form-select" style="border-radius: 10px; padding: 0.65rem 1rem;">
+                <option value="">All Roles</option>
+                <option value="2" selected="@(ViewData["RoleId"]?.ToString() == "2")">Customer</option>
+                <option value="3" selected="@(ViewData["RoleId"]?.ToString() == "3")">Organizer</option>
+                <option value="4" selected="@(ViewData["RoleId"]?.ToString() == "4")">Ticket Validator</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-circle-check me-1"></i> Status
+            </label>
+            <select name="isActive" class="form-select" style="border-radius: 10px; padding: 0.65rem 1rem;">
+                <option value="">All Status</option>
+                <option value="true" selected="@(ViewData["IsActive"]?.ToString() == "True")">✓ Active</option>
+                <option value="false" selected="@(ViewData["IsActive"]?.ToString() == "False")">✕ Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-dashboard-primary flex-grow-1">
+                    <i class="fa-solid fa-filter me-2"></i> Filter
+                </button>
+                <a asp-action="Index" class="btn btn-reset" title="Reset filters">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@{
+    string GetSortIcon(string column)
+    {
+        if (ViewData["SortBy"]?.ToString() != column) return "fa-sort";
+        return ViewData["SortOrder"]?.ToString() == "asc" ? "fa-sort-up" : "fa-sort-down";
+    }
+
+    string GetNextSortOrder(string column)
+    {
+        if (ViewData["SortBy"]?.ToString() != column) return "asc";
+        return ViewData["SortOrder"]?.ToString() == "asc" ? "desc" : "asc";
+    }
+
+    // Helper tạo URL sorting giữ nguyên filter hiện tại
+    string GetSortUrl(string column)
+    {
+        return $"?searchTerm={ViewData["SearchTerm"]}&isActive={ViewData["IsActive"]}&roleId={ViewData["RoleId"]}&sortBy={column}&sortOrder={GetNextSortOrder(column)}&pageNumber=1";
+    }
+}
+
+<div class="table-card">
+    <div class="table-responsive" style="overflow: visible;">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">Avatar</th>
+                    <th class="sortable-header" onclick="location.href='@GetSortUrl("FullName")'">
+                        Full Name <i class="fa-solid @GetSortIcon("FullName")"></i>
+                    </th>
+                    <th class="sortable-header" onclick="location.href='@GetSortUrl("Email")'">
+                        Email <i class="fa-solid @GetSortIcon("Email")"></i>
+                    </th>
+                    <th>Role</th>
+                    <th class="sortable-header" onclick="location.href='@GetSortUrl("IsActive")'">
+                        Status <i class="fa-solid @GetSortIcon("IsActive")"></i>
+                    </th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    @foreach (var u in Model.Items)
+                    {
+                        <tr id="user-row-@u.UserId">
+                            <td>
+                                <img src="@(string.IsNullOrEmpty(u.AvatarUrl) ? "/images/default-avatar.png" : u.AvatarUrl)"
+                                     alt="avatar" class="rounded-circle" width="40" height="40" style="object-fit: cover;">
+                            </td>
+                            <td>
+                                <div class="fw-bold">@u.FullName</div>
+                                <div class="text-muted small">@u.PhoneNumber</div>
+                            </td>
+                            <td>@u.Email</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">@u.Role.RoleName</span>
+                            </td>
+                            <td>
+                                @if (u.IsActive == true)
+                                {
+                                    <span class="status-badge status-published">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-hidden">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-boundary="window">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
+                                        <li>
+                                            <a class="dropdown-item" asp-action="Update" asp-route-id="@u.UserId">
+                                                <i class="fa-solid fa-user-pen text-warning me-2"></i> Edit User
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item toggle-lock-btn"
+                                               href="javascript:void(0)"
+                                               data-id="@u.UserId"
+                                               data-name="@u.FullName"
+                                               data-active="@u.IsActive.ToString().ToLower()">
+                                                @if (u.IsActive == true)
+                                                {
+                                                    <span><i class="fa-solid fa-user-lock text-danger me-2"></i> Lock Account</span>
+                                                }
+                                                else
+                                                {
+                                                    <span><i class="fa-solid fa-user-check text-success me-2"></i> Unlock Account</span>
+                                                }
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-user-slash fa-4x text-muted mb-3 opacity-50"></i>
+                                <h5 class="text-muted">No Users Found</h5>
+                                <p class="text-muted small mb-3">Try adjusting your search or filters</p>
+                                <a asp-action="Index" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa-solid fa-rotate-right me-1"></i> Clear Filters
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-4 paging-wrapper">
+    <div class="text-muted small">
+        Showing <strong>@((Model.PageNumber - 1) * Model.PageSize + 1)–@(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount))</strong>
+        of <strong>@Model.TotalCount</strong> users
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav>
+            <ul class="pagination mb-0">
+                <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageNumber - 1)"
+                       asp-route-searchTerm="@ViewData["SearchTerm"]"
+                       asp-route-isActive="@ViewData["IsActive"]"
+                       asp-route-roleId="@ViewData["RoleId"]"
+                       asp-route-sortBy="@ViewData["SortBy"]"
+                       asp-route-sortOrder="@ViewData["SortOrder"]">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </li>
+
+                @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-pageNumber="@i"
+                           asp-route-searchTerm="@ViewData["SearchTerm"]"
+                           asp-route-isActive="@ViewData["IsActive"]"
+                           asp-route-roleId="@ViewData["RoleId"]"
+                           asp-route-sortBy="@ViewData["SortBy"]"
+                           asp-route-sortOrder="@ViewData["SortOrder"]">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageNumber + 1)"
+                       asp-route-searchTerm="@ViewData["SearchTerm"]"
+                       asp-route-isActive="@ViewData["IsActive"]"
+                       asp-route-roleId="@ViewData["RoleId"]"
+                       asp-route-sortBy="@ViewData["SortBy"]"
+                       asp-route-sortOrder="@ViewData["SortOrder"]">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/common/toast.js"></script>
+    <script src="~/js/common/loading.js"></script>
+    <script>
+        $(document).ready(function () {
+            // --- Hàm tạo Popup Layout tại chỗ ---
+            function showConfirmPopup({ title, message, confirmText, type, onConfirm }) {
+                // Xóa popup cũ nếu có
+                $('#confirm-popup').remove();
+
+                const popupHtml = `
+                    <div id="confirm-popup">
+                        <div class="confirm-backdrop"></div>
+                        <div class="confirm-modal">
+                            <h5>${title}</h5>
+                            <p>${message}</p>
+                            <div class="actions">
+                                <button class="btn-cancel">Cancel</button>
+                                <button class="btn-confirm ${type}">${confirmText}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                $('body').append(popupHtml);
+
+                if (!$('#confirm-popup-style').length) {
+                    $('<style id="confirm-popup-style">')
+                        .prop('type', 'text/css')
+                        .html(`
+                            #confirm-popup { position: fixed; inset: 0; z-index: 9999; }
+                            .confirm-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(2px); }
+                            .confirm-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 1.5rem; border-radius: 14px; width: 380px; box-shadow: 0 25px 60px rgba(0,0,0,0.25); animation: popupFade 0.2s ease-out; }
+                            .confirm-modal h5 { margin: 0 0 0.5rem; font-size: 1.1rem; font-weight: 600; }
+                            .confirm-modal p { margin: 0 0 1.5rem; color: #6b7280; font-size: 0.95rem; }
+                            .actions { display: flex; justify-content: flex-end; gap: 0.75rem; }
+                            .actions button { border: none; border-radius: 8px; padding: 0.55rem 1.1rem; font-weight: 500; cursor: pointer; }
+                            .btn-cancel { background: #f3f4f6; color: #111827; }
+                            .btn-confirm.danger { background: #ef4444; color: white; }
+                            .btn-confirm.success { background: #22c55e; color: white; }
+                            @@keyframes popupFade { from { opacity: 0; transform: translate(-50%, -55%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+                        `).appendTo('head');
+                }
+
+                const close = () => $('#confirm-popup').remove();
+                $('.btn-cancel, .confirm-backdrop').on('click', close);
+
+                // Sự kiện xác nhận
+                $('.btn-confirm').on('click', function() {
+                    onConfirm();
+                    close();
+                });
+            }
+
+            $(".toggle-lock-btn").off('click').on('click', function (e) {
+                e.preventDefault();
+
+                const userId = $(this).data("id");
+                const userName = $(this).data("name");
+                const isActive = String($(this).data("active")) === "true";
+
+                const actionText = isActive ? "Lock" : "Unlock";
+                const theme = isActive ? "danger" : "success";
+
+                showConfirmPopup({
+                    title: `${actionText} Account`,
+                    message: `Are you sure you want to <strong>${actionText.toLowerCase()}</strong> account: <strong>${userName}</strong>?`,
+                    confirmText: actionText,
+                    type: theme,
+                    onConfirm: function () {
+                        if (typeof showLoading === "function") showLoading();
+
+                        $.ajax({
+                            url: '@Url.Action("ToggleLock", "Users")',
+                            type: 'POST',
+                            data: { id: userId },
+                            headers: {
+                                "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+                            },
+                            success: function (response) {
+                                if (response.success) {
+                                    if (typeof showToast === "function") {
+                                        showToast("success", response.message);
+                                    }
+                                    setTimeout(() => {
+                                        window.location.reload();
+                                    }, 1000);
+                                } else {
+                                    if (typeof hideLoading === "function") hideLoading();
+                                    showToast("danger", response.message);
+                                }
+                            },
+                            error: function (xhr) {
+                                if (typeof hideLoading === "function") hideLoading();
+                                const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "Something went wrong";
+                                showToast("danger", errorMsg);
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+@if (TempData["ToastMessage"] != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showToast(
+                "@TempData["ToastType"]",
+                "@TempData["ToastMessage"]"
+            );
+        });
+    </script>
+}

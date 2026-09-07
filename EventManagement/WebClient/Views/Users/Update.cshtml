@@ -1,0 +1,219 @@
+﻿@model WebClient.DTOs.Request.UpdateUserDTO
+
+@{
+    ViewData["Title"] = "Update User Profile";
+    Layout = "_LayoutAdmin";
+    // Lấy URL ảnh hiện tại từ ViewData (được gán từ Controller)
+    var currentAvatar = ViewData["CurrentAvatar"] as string;
+}
+
+<style>
+    .card-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #475569;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+    .avatar-preview-container {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 1.5rem;
+    }
+
+    .avatar-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .upload-btn-wrapper {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+    }
+
+    .btn-circle {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .validation-summary-errors {
+        color: #dc3545;
+        background-color: #f8d7da;
+        border: 1px solid #f5c2c7;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        list-style: none;
+    }
+</style>
+
+<div class="mb-4">
+    <a asp-action="Index" class="text-decoration-none text-muted fw-medium mb-2 d-inline-block">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Users List
+    </a>
+</div>
+
+<form asp-action="Update" method="post" enctype="multipart/form-data" id="updateUserForm">
+    @Html.AntiForgeryToken()
+
+    @* Hiển thị lỗi tổng quát nếu có từ API *@
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+    }
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card-section text-center">
+                <div class="section-header">
+                    <h5 class="fw-bold mb-0">Profile Picture</h5>
+                </div>
+
+                <div class="avatar-preview-container">
+                    <img id="avatarPreview"
+                         src="@(string.IsNullOrEmpty(currentAvatar) ? "/images/default-avatar.png" : currentAvatar)"
+                         class="avatar-preview" alt="Avatar">
+
+                    <div class="upload-btn-wrapper">
+                        <label class="btn btn-primary btn-circle shadow-sm" title="Change Avatar">
+                            <i class="fa-solid fa-camera"></i>
+                            <input type="file" asp-for="AvatarFile" id="avatarInput" class="d-none" accept="image/*">
+                        </label>
+                    </div>
+                </div>
+                <p class="text-muted small">Update your profile photo</p>
+                <span asp-validation-for="AvatarFile" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card-section">
+                <div class="section-header">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fa-solid fa-user-pen me-2 text-primary"></i>
+                        Account Settings
+                    </h5>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label asp-for="FullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input asp-for="FullName" class="form-control" placeholder="Enter full name">
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="e.g., 0901234567">
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="RoleId" class="form-label">System Role <span class="text-danger">*</span></label>
+                        <select asp-for="RoleId" class="form-select">
+                            <option value="">-- Change Role --</option>
+                            <option value="2">Customer</option>
+                            <option value="3">Organizer</option>
+                            <option value="4">Ticket Validator</option>
+                        </select>
+                        <span asp-validation-for="RoleId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check form-switch p-3 border rounded-3 bg-light">
+                            @* Dùng Hidden input để đảm bảo giá trị false vẫn được gửi lên nếu không check *@
+                            <input class="form-check-input ms-0 me-2" type="checkbox" id="isActiveSwitch"
+                                   @(Model?.IsActive == true ? "checked" : "")>
+                            @* Input ẩn này sẽ chứa giá trị thực tế gửi về Controller *@
+                            <input type="hidden" asp-for="IsActive" id="isActiveHidden" />
+
+                            <label class="form-check-label fw-bold" for="isActiveSwitch">Account Active Status</label>
+                            <p class="text-muted small mb-0 mt-1">When disabled, this user will be blocked from accessing the system.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mb-5">
+                <a asp-action="Index" class="btn btn-light px-4 border" style="border-radius: 10px;">Cancel</a>
+                <button type="submit" class="btn btn-primary px-5 shadow-sm" id="btnUpdate" style="border-radius: 10px;">
+                    <i class="fa-solid fa-save me-2"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/common/toast.js"></script>
+    <script src="~/js/common/confirm_popup.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Real-time Avatar Preview
+            $('#avatarInput').on('change', function () {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        $('#avatarPreview').attr('src', e.target.result);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Đồng bộ Checkbox Switch với Hidden Input cho IsActive
+            $('#isActiveSwitch').on('change', function() {
+                $('#isActiveHidden').val($(this).is(':checked'));
+            });
+            // Khởi tạo giá trị ban đầu cho Hidden Input
+            $('#isActiveHidden').val($('#isActiveSwitch').is(':checked'));
+
+            // Hiệu ứng Loading khi Submit
+            $('#updateUserForm').on('submit', function () {
+                if ($(this).valid()) {
+                    const btn = $('#btnUpdate');
+                    btn.prop('disabled', true);
+                    btn.html('<span class="spinner-border spinner-border-sm me-2"></span> Updating...');
+                }
+            });
+        });
+    </script>
+}

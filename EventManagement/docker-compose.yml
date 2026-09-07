@@ -1,0 +1,245 @@
+version: "3.9"
+
+x-common-variables: &common-variables
+  ASPNETCORE_URLS: "https://+:5000"
+  ASPNETCORE_Kestrel__Certificates__Default__Password: "123456"
+  ASPNETCORE_Kestrel__Certificates__Default__Path: "/https/aspnetapp.pfx"
+  DB_PASSWORD: "123456"
+
+services:
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    ports:
+      - "1437:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "123456"
+    volumes:
+      - sql-data:/var/opt/mssql
+    networks:
+      - app-network
+
+  authenticationapi:
+    build:
+      context: .
+      dockerfile: AuthenticationAPI/Dockerfile
+    container_name: authenticationapi
+    depends_on:
+      - sqlserver
+    environment:
+      <<: *common-variables
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=AuthDB;User Id=sa;Password=123456;TrustServerCertificate=True;"
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  bookingapi:
+    build:
+      context: .
+      dockerfile: BookingAPI/Dockerfile
+    container_name: bookingapi
+    depends_on:
+      - sqlserver
+    environment:
+      <<: *common-variables
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=BookingDB;User Id=sa;Password=123456;TrustServerCertificate=True;"
+    ports:
+      - "5002:5000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  categoryapi:
+    build:
+      context: .
+      dockerfile: CategoryAPI/Dockerfile
+    container_name: categoryapi
+    depends_on:
+      - sqlserver
+    environment:
+      <<: *common-variables
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=CategoryDB;User Id=sa;Password=123456;TrustServerCertificate=True;"
+    ports:
+      - "5003:5000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  chatapi:
+    build:
+      context: .
+      dockerfile: ChatAPI/Dockerfile
+    container_name: chatapi
+    depends_on:
+      - sqlserver
+    environment:
+      <<: *common-variables
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=ChatDB;User Id=sa;Password=123456;TrustServerCertificate=True;"
+    ports:
+      - "5004:5000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  chatbotapi:
+    build:
+      context: .
+      dockerfile: ChatbotAPI/Dockerfile
+    container_name: chatbotapi
+    depends_on:
+      - sqlserver
+    environment:
+      <<: *common-variables
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=ChatbotDB;User Id=sa;Password=123456;TrustServerCertificate=True;"
+    ports:
+      - "5005:5000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  eventapi:
+    build:
+      context: .
+      dockerfile: EventAPI/Dockerfile
+    container_name: eventapi
+    depends_on:
+      - sqlserver
+    environment:
+      <<: *common-variables
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=EventsDB;User Id=sa;Password=123456;TrustServerCertificate=True;"
+    ports:
+      - "5006:5000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  notificationapi:
+    build:
+      context: .
+      dockerfile: NotificationAPI/Dockerfile
+    container_name: notificationapi
+    depends_on:
+      - sqlserver
+    environment:
+      <<: *common-variables
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=NotificationDB;User Id=sa;Password=123456;TrustServerCertificate=True;"
+    ports:
+      - "5007:5000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  socialapi:
+    build:
+      context: .
+      dockerfile: SocialAPI/Dockerfile
+    container_name: socialapi
+    depends_on:
+      - sqlserver
+    environment:
+      <<: *common-variables
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=SocialDB;User Id=sa;Password=123456;TrustServerCertificate=True;"
+    ports:
+      - "5008:5000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  voucherapi:
+    build:
+      context: .
+      dockerfile: VoucherAPI/Dockerfile
+    container_name: voucherapi
+    depends_on:
+      - sqlserver
+    environment:
+      <<: *common-variables
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=VoucherDB;User Id=sa;Password=123456;TrustServerCertificate=True;"
+    ports:
+      - "5009:5000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  withdrawalapi:
+    build:
+      context: .
+      dockerfile: WithdrawalAPI/Dockerfile
+    container_name: withdrawalapi
+    depends_on:
+      - sqlserver
+    environment:
+      <<: *common-variables
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=WithdrawalDB;User Id=sa;Password=123456;TrustServerCertificate=True;"
+    ports:
+      - "5010:5000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  gatewayapi:
+    build:
+      context: .
+      dockerfile: GatewayAPI/Dockerfile
+    container_name: gatewayapi
+    depends_on:
+      - authenticationapi
+      - bookingapi
+      - categoryapi
+      - chatapi
+      - chatbotapi
+      - eventapi
+      - notificationapi
+      - socialapi
+      - voucherapi
+      - withdrawalapi
+    environment:
+      ASPNETCORE_URLS: "https://+:8080"
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "123456"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: "/https/aspnetapp.pfx"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+  webclient:
+    build:
+      context: .
+      dockerfile: WebClient/Dockerfile
+    container_name: webclient
+    depends_on:
+      - gatewayapi
+    environment:
+      ASPNETCORE_URLS: "https://+:7000"
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "123456"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: "/https/aspnetapp.pfx"
+      Gateway__BaseUrl: "https://gatewayapi:8080"
+    ports:
+      - "7000:7000"
+    volumes:
+      - ./https:/https
+    networks:
+      - app-network
+
+volumes:
+  sql-data:
+
+networks:
+  app-network:
+    driver: bridge

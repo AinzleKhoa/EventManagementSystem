@@ -1,0 +1,184 @@
+@model List<WebClient.DTOs.Response.ReadTicketDTO>
+@{
+    ViewData["Title"] = "Check-In Statistics - " + ViewBag.EventTitle;
+    Layout = "_LayoutStaff";
+    int eventId = (int)ViewBag.EventId;
+    string eventTitle = ViewBag.EventTitle ?? "Event";
+    int totalTickets = (int)ViewBag.TotalTickets;
+    int checkedIn = (int)ViewBag.CheckedIn;
+    int notCheckedIn = (int)ViewBag.NotCheckedIn;
+    double checkInRate = (double)ViewBag.CheckInRate;
+}
+
+<style>
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+        text-align: center;
+        border-top: 4px solid;
+    }
+    .stat-card.total   { border-color: #6366f1; }
+    .stat-card.success { border-color: #10b981; }
+    .stat-card.warning { border-color: #f59e0b; }
+    .stat-card.rate    { border-color: #3b82f6; }
+
+    .stat-number { font-size: 2.5rem; font-weight: 700; line-height: 1; }
+    .stat-label  { font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.5rem; }
+
+    .progress-ring-container { position: relative; display: inline-block; }
+    .rate-circle {
+        width: 140px; height: 140px;
+        border-radius: 50%;
+        background: conic-gradient(#10b981 calc(@checkInRate * 3.6deg), #e2e8f0 0deg);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto;
+        position: relative;
+    }
+    .rate-inner {
+        width: 100px; height: 100px;
+        border-radius: 50%;
+        background: white;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        position: absolute;
+    }
+    .rate-percent { font-size: 1.6rem; font-weight: 700; color: #10b981; line-height: 1; }
+    .rate-text    { font-size: 0.7rem; color: #64748b; }
+
+    .recent-table th { font-size: 0.8rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em; }
+    .ticket-code { font-family: monospace; font-size: 0.78rem; }
+    .timeline-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; margin-right: 6px; }
+</style>
+
+<div class="mb-4">
+    <a asp-action="MyEvents" class="text-decoration-none text-muted mb-2 d-inline-block">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to My Events
+    </a>
+    <div class="d-flex justify-content-between align-items-center mt-1">
+        <div>
+            <h3 class="fw-bold mb-0"><i class="fa-solid fa-chart-bar me-2 text-primary"></i>Check-In Statistics</h3>
+            <p class="text-muted mb-0"><strong>@eventTitle</strong> &mdash; @ViewBag.EventStartDate?.ToString("dd/MM/yyyy HH:mm")</p>
+        </div>
+        <a asp-action="EventTickets" asp-route-eventId="@eventId" class="btn btn-outline-primary btn-sm">
+            <i class="fa-solid fa-list me-1"></i>View All Tickets
+        </a>
+    </div>
+</div>
+
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card total">
+            <div class="stat-number text-primary">@totalTickets</div>
+            <div class="stat-label">Total Tickets</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card success">
+            <div class="stat-number text-success">@checkedIn</div>
+            <div class="stat-label">Checked In</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card warning">
+            <div class="stat-number text-warning">@notCheckedIn</div>
+            <div class="stat-label">Not Yet</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card rate">
+            <div class="stat-number text-info">@checkInRate<span style="font-size:1.2rem">%</span></div>
+            <div class="stat-label">Check-In Rate</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    
+    <div class="col-md-4">
+        <div class="bg-white rounded-3 shadow-sm p-4 h-100 d-flex flex-column align-items-center justify-content-center">
+            <h6 class="fw-bold text-muted text-uppercase small mb-3">Check-In Progress</h6>
+            <div class="rate-circle">
+                <div class="rate-inner">
+                    <span class="rate-percent">@checkInRate%</span>
+                    <span class="rate-text">Check-In</span>
+                </div>
+            </div>
+            <div class="mt-4 w-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small"><span class="timeline-dot" style="background:#10b981"></span>Checked In</span>
+                    <span class="fw-bold text-success">@checkedIn</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="small"><span class="timeline-dot" style="background:#e2e8f0"></span>Remaining</span>
+                    <span class="fw-bold text-muted">@notCheckedIn</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="col-md-8">
+        <div class="bg-white rounded-3 shadow-sm p-4">
+            <h6 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left me-2 text-success"></i>Recently Checked-In Tickets</h6>
+            @{
+                var recentCheckedIn = Model?
+                    .Where(t => t.CheckedInAt.HasValue)
+                    .OrderByDescending(t => t.CheckedInAt)
+                    .Take(10)
+                    .ToList() ?? new List<WebClient.DTOs.Response.ReadTicketDTO>();
+            }
+            @if (recentCheckedIn.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle recent-table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ticket Code</th>
+                                <th>Owner</th>
+                                <th>Type</th>
+                                <th>Checked-In At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ticket in recentCheckedIn)
+                            {
+                                <tr>
+                                    <td><span class="ticket-code text-muted">@ticket.TicketCode.ToString().ToUpper().Substring(0, 8)…</span></td>
+                                    <td class="fw-semibold">@(ticket.OwnerName ?? "N/A")</td>
+                                    <td>
+                                        @if (ticket.TicketType != null)
+                                        {
+                                            <span class="badge bg-light text-dark border">@ticket.TicketType.TypeName</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="text-success small">
+                                            <i class="fa-solid fa-check me-1"></i>
+                                            @ticket.CheckedInAt!.Value.ToString("HH:mm - dd/MM")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fa-solid fa-hourglass fa-2x text-muted opacity-50 mb-2"></i>
+                    <p class="text-muted mb-0">No check-ins yet.</p>
+                </div>
+            }
+
+            <div class="mt-3 text-center">
+                <a asp-action="EventTickets" asp-route-eventId="@eventId" asp-route-status="CheckedIn"
+                   class="btn btn-sm btn-outline-success">
+                    <i class="fa-solid fa-list me-1"></i>View All Checked-In Tickets
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

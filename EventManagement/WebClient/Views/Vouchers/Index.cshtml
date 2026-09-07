@@ -1,0 +1,268 @@
+﻿@model WebClient.DTOs.Response.PaginatedResultDTO<WebClient.DTOs.Response.ReadVoucherDTO>
+@{
+    ViewData["Title"] = "Vouchers";
+    Layout = "_LayoutStaff";
+}
+
+<link rel="stylesheet" href="~/css/vouchers/index_style.css" />
+<link rel="stylesheet" href="~/css/common/list_style.css" />
+<link rel="stylesheet" href="~/css/common/search_div.css" />
+<link rel="stylesheet" href="~/css/common/dashboard_paging.css" />
+<link rel="stylesheet" href="~/css/common/page_header_dashboard.css" />
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h3 class="mb-0">
+            <i class="fa-solid fa-ticket me-2"></i>
+            Voucher Management
+            <span class="stats-badge">@Model.TotalCount Vouchers</span>
+        </h3>
+    </div>
+    <a asp-action="Create" class="btn-dashboard-primary">
+        <i class="fa-solid fa-plus me-2"></i> New Voucher
+    </a>
+</div>
+
+<form method="get" asp-action="Index" class="search-card">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> Search
+            </label>
+            <input type="text"
+                   name="searchTerm"
+                   value="@ViewData["SearchTerm"]"
+                   class="form-control"
+                   placeholder="Search by code or description..."
+                   style="border-radius: 10px; padding: 0.65rem 1rem;">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-filter me-1"></i> Status
+            </label>
+            <select name="isActive" class="form-select" style="border-radius: 10px; padding: 0.65rem 1rem;">
+                <option value="">All Status</option>
+                <option value="true" selected="@(ViewData["IsActive"]?.ToString() == "True")">✓ Active</option>
+                <option value="false" selected="@(ViewData["IsActive"]?.ToString() == "False")">✕ Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-dashboard-primary flex-grow-1">
+                    <i class="fa-solid fa-search me-2"></i> Search
+                </button>
+                <a asp-action="Index" class="btn btn-reset" title="Reset filters">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@{
+    string GetSortIcon(string column)
+    {
+        if (ViewData["SortBy"]?.ToString() != column) return "fa-sort";
+        return ViewData["SortOrder"]?.ToString() == "asc" ? "fa-sort-up" : "fa-sort-down";
+    }
+
+    string GetNextSortOrder(string column)
+    {
+        if (ViewData["SortBy"]?.ToString() != column) return "asc";
+        return ViewData["SortOrder"]?.ToString() == "asc" ? "desc" : "asc";
+    }
+}
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th class="sortable-header" onclick="location.href='?searchTerm=@ViewData["SearchTerm"]&isActive=@ViewData["IsActive"]&sortBy=Code&sortOrder=@GetNextSortOrder("Code")&pageNumber=1'">
+                        Code <i class="fa-solid @GetSortIcon("Code")"></i>
+                    </th>
+
+                    <th class="sortable-header" onclick="location.href='?searchTerm=@ViewData["SearchTerm"]&isActive=@ViewData["IsActive"]&sortBy=DiscountValue&sortOrder=@GetNextSortOrder("DiscountValue")&pageNumber=1'">
+                        Discount <i class="fa-solid @GetSortIcon("DiscountValue")"></i>
+                    </th>
+
+                    <th>Usage</th>
+
+                    <th class="sortable-header" onclick="location.href='?searchTerm=@ViewData["SearchTerm"]&isActive=@ViewData["IsActive"]&sortBy=ValidTo&sortOrder=@GetNextSortOrder("ValidTo")&pageNumber=1'">
+                        Validity Period <i class="fa-solid @GetSortIcon("ValidTo")"></i>
+                    </th>
+
+                    <th class="sortable-header" onclick="location.href='?searchTerm=@ViewData["SearchTerm"]&isActive=@ViewData["IsActive"]&sortBy=IsActive&sortOrder=@GetNextSortOrder("IsActive")&pageNumber=1'">
+                        Status <i class="fa-solid @GetSortIcon("IsActive")"></i>
+                    </th>
+
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    @foreach (var v in Model.Items)
+                    {
+                        <tr id="voucher-row-@v.VoucherId">
+                            <td>
+                                <div class="fw-bold text-primary">@v.Code</div>
+                                <div class="small text-muted">
+                                    <i class="fa-solid fa-calendar-star me-1"></i>Event: @v.EventTitle
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="fw-medium">
+                                    @(v.DiscountType == "Percent" ? $"{v.DiscountValue.ToString("0.##")}%" : $"{v.DiscountValue:N0} đ")
+                                </span>
+                                <div class="small text-muted">@v.DiscountType</div>
+                            </td>
+
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="small">@v.UsedCount / @v.Quantity</span>
+                                    @{
+                                        var usagePercent = v.Quantity > 0 ? (v.UsedCount * 100.0 / v.Quantity) : 0;
+                                        var progressColor = usagePercent >= 100 ? "bg-danger" : "bg-success";
+                                    }
+                                    <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
+                                        <div class="progress-bar @progressColor" style="width: @usagePercent%"></div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="text-muted small">
+                                <div><i class="fa-regular fa-calendar me-1"></i> @(v.ValidFrom?.ToString("dd/MM/yyyy") ?? "N/A")</div>
+                                <div><i class="fa-regular fa-clock me-1"></i> @(v.ValidTo?.ToString("dd/MM/yyyy") ?? "N/A")</div>
+                            </td>
+
+                            <td>
+                                @if (v.IsActive == true)
+                                {
+                                    <span class="status-badge status-published">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-hidden">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn" type="button" data-bs-toggle="dropdown">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
+                                        <li>
+                                            <a class="dropdown-item" asp-action="Details" asp-route-id="@v.VoucherId">
+                                                <i class="fa-solid fa-circle-info text-info me-2"></i> View Details
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#"
+                                               class="dropdown-item text-danger"
+                                               onclick="confirmAction({
+                                                               title: 'Delete Voucher',
+                                                               message: 'Are you sure to delete voucher @v.Code?',
+                                                               url: '/Vouchers/Delete',
+                                                               id: '@v.VoucherId',
+                                                               confirmText: 'Delete',
+                                                               type: 'danger'
+                                                             })">
+                                                <i class="fa-regular fa-trash-can"></i> Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-ticket fa-4x text-muted mb-3 opacity-50"></i>
+                                <h5 class="text-muted">No Vouchers Found</h5>
+                                <p class="text-muted small mb-3">Try adjusting your search or filters</p>
+                                <a asp-action="Index" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa-solid fa-rotate-right me-1"></i> Clear Filters
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-4 paging-wrapper">
+    <div class="text-muted small">
+        Showing <strong>@((Model.PageNumber - 1) * Model.PageSize + 1)–@(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount))</strong>
+        of <strong>@Model.TotalCount</strong> vouchers
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav>
+            <ul class="pagination mb-0">
+                <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageNumber - 1)"
+                       asp-route-searchTerm="@ViewData["SearchTerm"]"
+                       asp-route-isActive="@ViewData["IsActive"]"
+                       asp-route-sortBy="@ViewData["SortBy"]"
+                       asp-route-sortOrder="@ViewData["SortOrder"]">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </li>
+
+                @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-pageNumber="@i"
+                           asp-route-searchTerm="@ViewData["SearchTerm"]"
+                           asp-route-isActive="@ViewData["IsActive"]"
+                           asp-route-sortBy="@ViewData["SortBy"]"
+                           asp-route-sortOrder="@ViewData["SortOrder"]">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageNumber + 1)"
+                       asp-route-searchTerm="@ViewData["SearchTerm"]"
+                       asp-route-isActive="@ViewData["IsActive"]"
+                       asp-route-sortBy="@ViewData["SortBy"]"
+                       asp-route-sortOrder="@ViewData["SortOrder"]">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/common/toast.js"></script>
+    <script src="~/js/common/confirm_popup.js"></script>
+}
+@if (TempData["ToastMessage"] != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showToast(
+                "@TempData["ToastType"]",
+                "@TempData["ToastMessage"]"
+            );
+        });
+    </script>
+}

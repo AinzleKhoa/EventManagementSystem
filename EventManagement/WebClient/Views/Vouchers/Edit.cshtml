@@ -1,0 +1,196 @@
+﻿@model WebClient.DTOs.Request.UpdateVoucherDTO
+@{
+    ViewData["Title"] = "Update Voucher";
+    Layout = "_LayoutStaff";
+    
+    // Kiểm tra xem voucher đã được sử dụng chưa
+    var isUsed = Model.UsedCount > 0;
+}
+
+<style>
+    .card-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+
+    .info-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: #64748b;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #475569;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+    
+        /* CSS cho các field bị khóa để trông tự nhiên hơn */
+        .form-control[readonly], .form-select[disabled] {
+            background-color: #f8fafc;
+            cursor: not-allowed;
+            color: #64748b;
+        }
+</style>
+
+<div class="mb-4">
+    <a asp-action="Index" class="text-decoration-none text-muted fw-medium mb-2 d-inline-block">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Vouchers
+    </a>
+</div>
+
+<form asp-action="Edit" method="post" id="updateVoucherForm">
+    <input type="hidden" asp-for="Code" />
+    <input type="hidden" asp-for="EventId" />
+    <input type="hidden" asp-for="UsedCount" />
+
+    <div class="card-section bg-light border">
+        <div class="row">
+            <div class="col-md-4 border-end">
+                <div class="info-label mb-1">Target Event</div>
+                <div class="info-value text-primary">
+                    <i class="fa-solid fa-calendar-check me-2"></i> @ViewBag.EventName
+                </div>
+                <small class="text-muted">ID: @Model.EventId</small>
+            </div>
+            
+            <div class="col-md-4 border-end ps-md-4">
+                <div class="info-label mb-1">Voucher Code</div>
+                <div class="info-value">
+                    <span class="badge bg-dark fs-6 px-3 py-2">@Model.Code</span>
+                </div>
+            </div>
+            
+            <div class="col-md-4 ps-md-4">
+                <div class="info-label mb-1">Usage Status</div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-5 fw-bold">@Model.UsedCount</span>
+                    <span class="text-muted">used</span>
+                </div>
+                <div class="progress mt-2" style="height: 6px;">
+                    @{
+                        var percent = Model.Quantity > 0 ? (Model.UsedCount * 100 / Model.Quantity) : 0;
+                    }
+                    <div class="progress-bar bg-success" style="width: @percent%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-section">
+        <div class="section-header border-bottom pb-3 mb-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">
+                <i class="fa-solid fa-sliders me-2 text-warning"></i>
+                Update Policy & Validity
+            </h5>
+            
+            @if (isUsed)
+            {
+                <span class="badge bg-warning text-dark px-3 py-2">
+                    <i class="fa-solid fa-lock me-1"></i> Policy is locked because voucher is in use
+                </span>
+            }
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="form-label">Discount Type <span class="text-danger">*</span></label>
+                
+                @if (isUsed)
+                {
+                    <select asp-for="DiscountType" class="form-select" disabled>
+                        <option value="Percent">Percent (%)</option>
+                        <option value="Amount">Fixed Amount (VND)</option>
+                    </select>
+                    <input type="hidden" asp-for="DiscountType" />
+                }
+                else
+                {
+                    <select asp-for="DiscountType" class="form-select">
+                        <option value="Percent">Percent (%)</option>
+                        <option value="Amount">Fixed Amount (VND)</option>
+                    </select>
+                }
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Discount Value <span class="text-danger">*</span></label>
+                <input asp-for="DiscountValue" type="number" step="0.01" class="form-control" readonly="@(isUsed ? "readonly" : null)" />
+                <span asp-validation-for="DiscountValue" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label">Total Quantity <span class="text-danger">*</span></label>
+                <input asp-for="Quantity" type="number" class="form-control" />
+                <div class="form-text text-muted small">
+                    Must be greater than or equal to current usage (@Model.UsedCount).
+                </div>
+                <span asp-validation-for="Quantity" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Valid From</label>
+                <input asp-for="ValidFrom" type="date" class="form-control" />
+                <span asp-validation-for="ValidFrom" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Valid To</label>
+                <input asp-for="ValidTo" type="date" class="form-control" />
+                <span asp-validation-for="ValidTo" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label">Status</label>
+                <select asp-for="IsActive" class="form-select">
+                    <option value="true">Active (Publish)</option>
+                    <option value="false">Inactive (Hidden)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mb-5">
+        <button type="submit" class="btn btn-warning px-5 fw-bold text-white">Save Changes</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/common/loading.js"></script>
+
+    @if (TempData["ToastMessage"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                showToast(
+                    "@TempData["ToastType"]",
+                    "@TempData["ToastMessage"]"
+                );
+            });
+        </script>
+    }
+}

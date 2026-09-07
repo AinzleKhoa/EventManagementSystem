@@ -1,0 +1,87 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "GatewayAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/GatewayAPI --launch-profile https"
+    },
+    {
+      "label": "WebClient",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/WebClient --launch-profile https"
+    },
+    {
+      "label": "AuthenticationAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/AuthenticationAPI --launch-profile https"
+    },
+    {
+      "label": "BookingAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/BookingAPI --launch-profile https"
+    },
+    {
+      "label": "CategoryAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/CategoryAPI --launch-profile https"
+    },
+    {
+      "label": "ChatAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/ChatAPI --launch-profile https"
+    },
+    {
+      "label": "ChatbotAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/ChatbotAPI --launch-profile https"
+    },
+    {
+      "label": "EventAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/EventAPI --launch-profile https"
+    },
+    {
+      "label": "NotificationAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/NotificationAPI --launch-profile https"
+    },
+    {
+      "label": "SocialAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/SocialAPI --launch-profile https"
+    },
+    {
+      "label": "VoucherAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/VoucherAPI --launch-profile https"
+    },
+    {
+      "label": "WithdrawalAPI",
+      "type": "shell",
+      "command": "dotnet watch run --project EventManagement/WithdrawalAPI --launch-profile https"
+    },
+    {
+      "label": "Run All Microservices",
+      "dependsOn": [
+        "GatewayAPI",
+        "WebClient",
+        "AuthenticationAPI",
+        "BookingAPI",
+        "CategoryAPI",
+        "ChatAPI",
+        "ChatbotAPI",
+        "EventAPI",
+        "NotificationAPI",
+        "SocialAPI",
+        "VoucherAPI",
+        "WithdrawalAPI"
+      ],
+      "dependsOrder": "parallel",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

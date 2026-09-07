@@ -1,0 +1,30 @@
+﻿@model WebClient.Models.Category
+@{
+    ViewData["Title"] = "Delete Category";
+    Layout = "_LayoutAdmin";
+}
+
+<div class="card-section">
+    <h5 class="fw-bold text-danger mb-3">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+        Delete Category
+    </h5>
+
+    <p>Are you sure to delete this category?</p>
+
+    <div class="mb-3">
+        <strong>@Model.CategoryName</strong><br />
+        <small class="text-muted">@Model.Description</small>
+    </div>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="CategoryId" />
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">
+                <i class="fa-regular fa-trash-can me-1"></i> Delete
+            </button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

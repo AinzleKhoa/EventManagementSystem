@@ -1,0 +1,308 @@
+@model WebClient.DTOs.Response.PaginatedResultDTO<WebClient.DTOs.Response.ReadEventDTO>
+@{
+    ViewData["Title"] = "Events";
+    Layout = "_LayoutStaff";
+}
+
+<link rel="stylesheet" href="~/css/common/list_style.css" />
+<link rel="stylesheet" href="~/css/common/search_div.css" />
+<link rel="stylesheet" href="~/css/common/dashboard_paging.css" />
+<link rel="stylesheet" href="~/css/common/page_header_dashboard.css" />
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h3 class="mb-0">
+            <i class="fa-solid fa-calendar-days me-2"></i>
+            Event Management
+            <span class="stats-badge">@Model.TotalCount Events</span>
+        </h3>
+    </div>
+    <a asp-action="Create" class="btn-dashboard-primary">
+        <i class="fa-solid fa-plus me-2"></i> New Event
+    </a>
+</div>
+
+<form method="get" asp-action="Index" class="search-card">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> Search
+            </label>
+            <input type="text" 
+                   name="searchTerm" 
+                   value="@ViewData["SearchTerm"]" 
+                   class="form-control" 
+                   placeholder="Search by title or location..."
+                   style="border-radius: 10px; padding: 0.65rem 1rem;">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-filter me-1"></i> Status
+            </label>
+            <select name="status" class="form-select" style="border-radius: 10px; padding: 0.65rem 1rem;">
+                <option value="">All Status</option>
+                <option value="Approved" selected="@(ViewData["Status"]?.ToString() == "Approved")">✓ Approved</option>
+                <option value="Pending" selected="@(ViewData["Status"]?.ToString() == "Pending")">⏳ Pending</option>
+                <option value="Rejected" selected="@(ViewData["Status"]?.ToString() == "Rejected")">✖ Rejected</option>
+                <option value="Draft" selected="@(ViewData["Status"]?.ToString() == "Draft")">✎ Draft</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-dashboard-primary flex-grow-1">
+                    <i class="fa-solid fa-search me-2"></i> Search
+                </button>
+                <a asp-action="Index" class="btn btn-reset" title="Reset filters">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@{
+    string GetSortIcon(string column)
+    {
+        if (ViewData["SortBy"]?.ToString() != column) return "fa-sort";
+        return ViewData["SortOrder"]?.ToString() == "asc" ? "fa-sort-up" : "fa-sort-down";
+    }
+    
+    string GetNextSortOrder(string column)
+    {
+        if (ViewData["SortBy"]?.ToString() != column) return "asc";
+        return ViewData["SortOrder"]?.ToString() == "asc" ? "desc" : "asc";
+    }
+}
+
+<div class="table-card">
+    <div class="table-responsive" style="overflow: visible;">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th class="sortable-header" onclick="location.href='?searchTerm=@ViewData["SearchTerm"]&status=@ViewData["Status"]&sortBy=Title&sortOrder=@GetNextSortOrder("Title")&pageNumber=1'">
+                        Title <i class="fa-solid @GetSortIcon("Title")"></i>
+                    </th>
+                    <th class="sortable-header" onclick="location.href='?searchTerm=@ViewData["SearchTerm"]&status=@ViewData["Status"]&sortBy=StartDate&sortOrder=@GetNextSortOrder("StartDate")&pageNumber=1'">
+                        Date <i class="fa-solid @GetSortIcon("StartDate")"></i>
+                    </th>
+                    <th class="sortable-header" onclick="location.href='?searchTerm=@ViewData["SearchTerm"]&status=@ViewData["Status"]&sortBy=Status&sortOrder=@GetNextSortOrder("Status")&pageNumber=1'">
+                        Status <i class="fa-solid @GetSortIcon("Status")"></i>
+                    </th>
+                    <th>Sold</th>
+                    <th>Revenue</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    @foreach (var e in Model.Items)
+                    {
+                        <tr id="event-row-@e.EventId">
+                            <td class="fw-bold">@e.Title</td>
+                            <td class="text-muted">@e.StartDate.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td>
+                                @if (e.Status == "Approved")
+                                {
+                                    <span class="status-badge status-approved">Approved</span>
+                                }
+                                else if (e.Status == "Pending")
+                                {
+                                    <span class="status-badge status-pending">Pending</span>
+                                }
+                                else if (e.Status == "Rejected")
+                                {
+                                    <span class="status-badge bg-danger text-white">Rejected</span>
+                                }
+                                else if (e.Status == "Draft")
+                                {
+                                    <span class="status-badge status-draft">Draft</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-hidden">@e.Status</span>
+                                }
+                            </td>
+                            <td class="fw-bold text-primary">
+                                @if (ViewBag.EventTickets != null && ViewBag.EventTickets.ContainsKey(e.EventId))
+                                {
+                                    @ViewBag.EventTickets[e.EventId]
+                                }
+                                else
+                                {
+                                    @:0
+                                }
+                            </td>
+                            <td class="fw-bold text-success">
+                                @if (ViewBag.EventRevenues != null && ViewBag.EventRevenues.ContainsKey(e.EventId))
+                                {
+                                    var rev = (long)ViewBag.EventRevenues[e.EventId];
+                                    @string.Format("{0:N0} ₫", rev)
+                                }
+                                else
+                                {
+                                    @:0 ₫
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-boundary="window">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
+                                        <li>
+                                            <a class="dropdown-item text-success" asp-controller="Dashboard" asp-action="EventOrders" asp-route-eventId="@e.EventId">
+                                                <i class="fa-solid fa-cart-shopping text-success me-2"></i> View Orders
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-action="Details" asp-route-id="@e.EventId">
+                                                <i class="fa-solid fa-circle-info text-info me-2"></i> View Details
+                                            </a>
+                                        </li>
+                                        @if (e.Status != "Approved" && e.Status != "Published")
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" asp-action="Update" asp-route-id="@e.EventId">
+                                                    <i class="fa-solid fa-pen-to-square text-warning me-2"></i> Edit Event
+                                                </a>
+                                            </li>
+                                        }
+
+                                        <li><hr class="dropdown-divider"></li>
+                                        @if (e.Status == "Draft" || e.Status == "Rejected")
+                                        {
+                                            <li>
+                                                <a class="dropdown-item text-primary" asp-action="Submit" asp-route-id="@e.EventId">
+                                                    <i class="fa-solid fa-paper-plane me-2"></i> Submit for Approval
+                                                </a>
+                                            </li>
+                                        }
+
+                                        @if (e.Status == "Approved" || e.Status == "Published")
+                                        {
+                                            <li>
+                                                <a class="dropdown-item text-secondary" asp-action="Hide" asp-route-id="@e.EventId"
+                                                   onclick="return confirm('Are you sure you want to hide this event from the public?');">
+                                                    <i class="fa-solid fa-eye-slash me-2"></i> Hide Event
+                                                </a>
+                                            </li>
+                                        }
+
+                                        @if (e.Status == "Hidden")
+                                        {
+                                            <li>
+                                                <a class="dropdown-item text-success" asp-action="Resume" asp-route-id="@e.EventId"
+                                                   onclick="return confirm('Are you sure you want to resume sales for this event?');">
+                                                    <i class="fa-solid fa-play me-2"></i> Resume Event
+                                                </a>
+                                            </li>
+                                        }
+
+                                        <li><hr class="dropdown-divider"></li>
+
+                                        @if (e.Status != "Approved" && e.Status != "Published")
+                                        {
+                                            <li>
+                                                <a class="dropdown-item text-danger" asp-action="Delete" asp-route-id="@e.EventId"
+                                                   onclick="return confirm('Are you sure you want to permanently delete this event?');">
+                                                    <i class="fa-regular fa-trash-can me-2"></i> Delete
+                                                </a>
+                                            </li>
+                                        }
+
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-calendar-days fa-4x text-muted mb-3 opacity-50"></i>
+                                <h5 class="text-muted">No Events Found</h5>
+                                <p class="text-muted small mb-3">Try adjusting your search or filters</p>
+                                <a asp-action="Index" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa-solid fa-rotate-right me-1"></i> Clear Filters
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="d-flex justify-content-between align-items-center mt-4 paging-wrapper">
+    <div class="text-muted small">
+        Showing <strong>@((Model.PageNumber - 1) * Model.PageSize + 1)–@(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount))</strong> 
+        of <strong>@Model.TotalCount</strong> events
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav>
+            <ul class="pagination mb-0">
+                <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" 
+                       asp-action="Index" 
+                       asp-route-pageNumber="@(Model.PageNumber - 1)"
+                       asp-route-searchTerm="@ViewData["SearchTerm"]"
+                       asp-route-status="@ViewData["Status"]"
+                       asp-route-sortBy="@ViewData["SortBy"]"
+                       asp-route-sortOrder="@ViewData["SortOrder"]">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </li>
+
+                @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link" 
+                           asp-action="Index" 
+                           asp-route-pageNumber="@i"
+                           asp-route-searchTerm="@ViewData["SearchTerm"]"
+                           asp-route-status="@ViewData["Status"]"
+                           asp-route-sortBy="@ViewData["SortBy"]"
+                           asp-route-sortOrder="@ViewData["SortOrder"]">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                    <a class="page-link" 
+                       asp-action="Index" 
+                       asp-route-pageNumber="@(Model.PageNumber + 1)"
+                       asp-route-searchTerm="@ViewData["SearchTerm"]"
+                       asp-route-status="@ViewData["Status"]"
+                       asp-route-sortBy="@ViewData["SortBy"]"
+                       asp-route-sortOrder="@ViewData["SortOrder"]">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+
+@section Scripts{
+    <script src="~/js/common/toast.js"></script>
+    <script src="~/js/common/confirm_popup.js"></script>
+
+}
+@if (TempData["ToastMessage"] != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showToast(
+                "@TempData["ToastType"]",
+                "@TempData["ToastMessage"]"
+            );
+        });
+    </script>
+}

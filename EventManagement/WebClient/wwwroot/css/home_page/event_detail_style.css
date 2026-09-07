@@ -1,0 +1,175 @@
+﻿/* --- Hero Section --- */
+.event-hero {
+    position: relative;
+    height: 450px;
+    overflow: hidden;
+    border-radius: 0 0 30px 30px;
+}
+
+    .event-hero img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.event-hero-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 60%);
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 3rem;
+}
+
+/* --- Main Content Layout --- */
+.content-container {
+    margin-top: -60px; /* Pull up to overlap hero */
+    position: relative;
+    z-index: 10;
+}
+
+/* Left Side: Info */
+.info-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 2rem;
+    margin-top: 2rem;
+}
+
+.organizer-badge {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background-color: #f8fafc;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+/* Right Side: Sticky Booking Card */
+.booking-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    position: sticky;
+    top: 100px;
+    border: 1px solid #e2e8f0;
+    margin-top: 2rem;
+}
+
+.ticket-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+    .ticket-row:last-child {
+        border-bottom: none;
+    }
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    padding: 5px 10px;
+    border-radius: 50px;
+}
+
+.btn-qty {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: white;
+    color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .btn-qty:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+.btn-book {
+    background: linear-gradient(90deg, var(--primary-color), #4f46e5);
+    color: white;
+    font-weight: 600;
+    padding: 1rem;
+    border-radius: 12px;
+    border: none;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    transition: 0.3s;
+}
+
+    .btn-book:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+    }
+
+/* Review Section */
+.review-avatar {
+    width: 40px;
+    height: 40px;
+    background: #e2e8f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--text-muted);
+}
+
+/* =========================================================
+   Nút Wishlist (Giống hệt Home Page)
+========================================================= */
+.btn-wishlist-hero {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: rgba(255, 255, 255, 0.9) !important; /* Nền trắng mờ */
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: 0.3s;
+    z-index: 20;
+}
+
+    /* KHI CHƯA LƯU: Trái tim màu xám (như trang chủ) */
+    .btn-wishlist-hero i {
+        color: #9ca3af !important;
+        font-size: 1.5rem;
+        transition: 0.3s;
+    }
+
+    .btn-wishlist-hero:hover i {
+        color: #6b7280 !important;
+    }
+
+    /* KHI ĐÃ LƯU: Nền hồng, trái tim màu đỏ */
+    .btn-wishlist-hero.active {
+        background: #fff0f3 !important;
+    }
+
+        .btn-wishlist-hero.active i {
+            color: #e11d48 !important;
+        }

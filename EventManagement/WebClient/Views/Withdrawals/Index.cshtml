@@ -1,0 +1,118 @@
+@model List<WebClient.DTOs.Response.ReadWithdrawalDTO>
+@{
+    ViewData["Title"] = "My Withdrawal Requests";
+    Layout = "_LayoutStaff";
+    string currentStatus = ViewData["Status"]?.ToString() ?? "";
+}
+
+<link rel="stylesheet" href="~/css/common/list_style.css" />
+<link rel="stylesheet" href="~/css/common/page_header_dashboard.css" />
+<link rel="stylesheet" href="~/css/common/dashboard_paging.css" />
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h3 class="mb-0">
+            <i class="fa-solid fa-money-bill-transfer me-2"></i>
+            My Withdrawal Requests
+            <span class="stats-badge">@Model.Count requests</span>
+        </h3>
+    </div>
+    <a asp-action="Create" class="btn-dashboard-primary">
+        <i class="fa-solid fa-plus me-2"></i> New Request
+    </a>
+</div>
+
+<!-- Status filter tabs -->
+<div class="mb-3 d-flex gap-2 flex-wrap">
+    <a asp-action="Index" class="btn @(string.IsNullOrEmpty(currentStatus) ? "btn-primary" : "btn-outline-secondary") btn-sm">All</a>
+    <a asp-action="Index" asp-route-status="Pending"  class="btn @(currentStatus == "Pending"  ? "btn-warning text-dark" : "btn-outline-warning") btn-sm">Pending</a>
+    <a asp-action="Index" asp-route-status="Approved" class="btn @(currentStatus == "Approved" ? "btn-success" : "btn-outline-success") btn-sm">Approved</a>
+    <a asp-action="Index" asp-route-status="Rejected" class="btn @(currentStatus == "Rejected" ? "btn-danger"  : "btn-outline-danger") btn-sm">Rejected</a>
+</div>
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Bank</th>
+                    <th>Account</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Requested At</th>
+                    <th>Processed At</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var w in Model)
+                    {
+                        <tr>
+                            <td>@w.WithdrawalId</td>
+                            <td class="fw-bold">@w.BankName</td>
+                            <td>
+                                <span class="fw-semibold">@w.BankAccountNumber</span><br />
+                                <small class="text-muted">@w.BankAccountName</small>
+                            </td>
+                            <td class="fw-bold text-primary">@w.Amount.ToString("N0") ₫</td>
+                            <td>
+                                @{
+                                    var badge = w.Status switch
+                                    {
+                                        "Approved" => "bg-success",
+                                        "Rejected" => "bg-danger",
+                                        _          => "bg-warning text-dark"
+                                    };
+                                }
+                                <span class="badge @badge">@w.Status</span>
+                                @if (w.Status == "Rejected" && !string.IsNullOrEmpty(w.RejectReason))
+                                {
+                                    <br /><small class="text-danger"><i class="fa-solid fa-circle-info me-1"></i>@w.RejectReason</small>
+                                }
+                            </td>
+                            <td class="text-muted small">@w.RequestedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-muted small">@(w.ProcessedAt?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn" type="button" data-bs-toggle="dropdown">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
+                                        <li>
+                                            <a class="dropdown-item" asp-action="Details" asp-route-id="@w.WithdrawalId">
+                                                <i class="fa-solid fa-eye text-secondary me-1"></i> View Details
+                                            </a>
+                                        </li>
+
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fa-solid fa-inbox fa-2x mb-2 d-block"></i>
+                            No withdrawal requests found.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (TempData["ToastMessage"] != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showToast("@TempData["ToastMessage"]", "@TempData["ToastType"]");
+        });
+    </script>
+}
+<script src="~/js/toast.js"></script>

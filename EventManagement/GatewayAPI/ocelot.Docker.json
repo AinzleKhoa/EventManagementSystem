@@ -1,0 +1,215 @@
+﻿{
+  "Routes": [
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "categoryapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/category-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authenticationapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/authentication-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "eventapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/event-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{action}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "eventapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/event-gateway/{controller}/{action}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "bookingapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/booking-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "socialapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/social-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "voucherapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/voucher-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}/{action}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "withdrawalapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/withdrawal-gateway/{controller}/{id}/{action}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete", "Patch" ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "withdrawalapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/withdrawal-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete", "Patch" ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "withdrawalapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/withdrawal-gateway/{controller}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete", "Patch" ],
+      "AddHeadersToDownstream": {
+        "Authorization": "{Authorization}"
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "chatapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/chat-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ]
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/notification-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ]
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/{controller}/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "chatbotapi",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/chatbot-gateway/{controller}/{id}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ]
+    }
+
+  ],
+
+  "GlobalConfiguration": {
+    "BaseUrl": "https://gatewayapi:8080",
+    "HttpHandlerOptions": {
+      "AllowAutoRedirect": false,
+      "UseCookieContainer": false,
+      "UseTracing": false,
+      "UseProxy": true,
+      "DangerousAcceptAnyServerCertificateValidator": true
+    }
+  }
+}

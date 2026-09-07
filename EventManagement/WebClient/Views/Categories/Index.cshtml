@@ -1,0 +1,230 @@
+﻿@model WebClient.DTOs.Response.PaginatedResultDTO<WebClient.DTOs.Response.ReadCategoryDTO>
+@{
+    ViewData["Title"] = "Categories";
+    Layout = "_layoutAdmin";
+}
+
+<link rel="stylesheet" href="~/css/categories/index_style.css" />
+<link rel="stylesheet" href="~/css/common/list_style.css" />
+<link rel="stylesheet" href="~/css/common/search_div.css" />
+<link rel="stylesheet" href="~/css/common/dashboard_paging.css" />
+<link rel="stylesheet" href="~/css/common/page_header_dashboard.css" />
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h3 class="mb-0">
+            <i class="fa-solid fa-folder-tree me-2"></i>
+            Category Management
+            <span class="stats-badge">@Model.TotalCount Categories</span>
+        </h3>
+    </div>
+    <a asp-action="Create" class="btn-dashboard-primary">
+        <i class="fa-solid fa-plus me-2"></i> New Category
+    </a>
+</div>
+
+<form method="get" asp-action="Index" class="search-card">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> Search
+            </label>
+            <input type="text" 
+                   name="searchTerm" 
+                   value="@ViewData["SearchTerm"]" 
+                   class="form-control" 
+                   placeholder="Search by name or description..."
+                   style="border-radius: 10px; padding: 0.65rem 1rem;">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold text-muted small mb-2">
+                <i class="fa-solid fa-filter me-1"></i> Status
+            </label>
+            <select name="isActive" class="form-select" style="border-radius: 10px; padding: 0.65rem 1rem;">
+                <option value="">All Status</option>
+                <option value="true" selected="@(ViewData["IsActive"]?.ToString() == "True")">✓ Active</option>
+                <option value="false" selected="@(ViewData["IsActive"]?.ToString() == "False")">✕ Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-dashboard-primary flex-grow-1">
+                    <i class="fa-solid fa-search me-2"></i> Search
+                </button>
+                <a asp-action="Index" class="btn btn-reset" title="Reset filters">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@{
+    string GetSortIcon(string column)
+    {
+        if (ViewData["SortBy"]?.ToString() != column) return "fa-sort";
+        return ViewData["SortOrder"]?.ToString() == "asc" ? "fa-sort-up" : "fa-sort-down";
+    }
+    
+    string GetNextSortOrder(string column)
+    {
+        if (ViewData["SortBy"]?.ToString() != column) return "asc";
+        return ViewData["SortOrder"]?.ToString() == "asc" ? "desc" : "asc";
+    }
+}
+
+<div class="table-card">
+    <div class="table-responsive" style="overflow: visible;">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th class="sortable-header" onclick="location.href='?searchTerm=@ViewData["SearchTerm"]&isActive=@ViewData["IsActive"]&sortBy=CategoryName&sortOrder=@GetNextSortOrder("CategoryName")&pageNumber=1'">
+                        Name <i class="fa-solid @GetSortIcon("CategoryName")"></i>
+                    </th>
+                    <th class="sortable-header" onclick="location.href='?searchTerm=@ViewData["SearchTerm"]&isActive=@ViewData["IsActive"]&sortBy=Description&sortOrder=@GetNextSortOrder("Description")&pageNumber=1'">
+                        Description <i class="fa-solid @GetSortIcon("Description")"></i>
+                    </th>
+                    <th class="sortable-header" onclick="location.href='?searchTerm=@ViewData["SearchTerm"]&isActive=@ViewData["IsActive"]&sortBy=IsActive&sortOrder=@GetNextSortOrder("IsActive")&pageNumber=1'">
+                        Status <i class="fa-solid @GetSortIcon("IsActive")"></i>
+                    </th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    @foreach (var c in Model.Items)
+                    {
+                        <tr id="category-row-@c.CategoryId">
+                            <td class="fw-bold">@c.CategoryName</td>
+                            <td class="text-muted">@(string.IsNullOrEmpty(c.Description) ? "N/A" : c.Description)</td>
+                            <td>
+                                @if (c.IsActive == true)
+                                {
+                                    <span class="status-badge status-published">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-hidden">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-boundary="window">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
+                                        <li>
+                                            <a class="dropdown-item" asp-action="Update" asp-route-id="@c.CategoryId">
+                                                <i class="fa-solid fa-pencil text-warning"></i> Edit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#"
+                                               class="dropdown-item text-danger"
+                                               onclick="confirmAction({
+                                                       title: 'Delete category',
+                                                       message: 'Are you sure to delete?',
+                                                       url: '/Categories/Delete',
+                                                       id: '@c.CategoryId',
+                                                       confirmText: 'Delete',
+                                                       type: 'danger'
+                                                   })">
+                                                <i class="fa-regular fa-trash-can"></i> Delete
+                                            </a>
+                                         </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-folder-open fa-4x text-muted mb-3 opacity-50"></i>
+                                <h5 class="text-muted">No Categories Found</h5>
+                                <p class="text-muted small mb-3">Try adjusting your search or filters</p>
+                                <a asp-action="Index" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa-solid fa-rotate-right me-1"></i> Clear Filters
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="d-flex justify-content-between align-items-center mt-4 paging-wrapper">
+    <div class="text-muted small">
+        Showing <strong>@((Model.PageNumber - 1) * Model.PageSize + 1)–@(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount))</strong> 
+        of <strong>@Model.TotalCount</strong> categories
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav>
+            <ul class="pagination mb-0">
+                <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" 
+                       asp-action="Index" 
+                       asp-route-pageNumber="@(Model.PageNumber - 1)"
+                       asp-route-searchTerm="@ViewData["SearchTerm"]"
+                       asp-route-isActive="@ViewData["IsActive"]"
+                       asp-route-sortBy="@ViewData["SortBy"]"
+                       asp-route-sortOrder="@ViewData["SortOrder"]">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </li>
+
+                @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link" 
+                           asp-action="Index" 
+                           asp-route-pageNumber="@i"
+                           asp-route-searchTerm="@ViewData["SearchTerm"]"
+                           asp-route-isActive="@ViewData["IsActive"]"
+                           asp-route-sortBy="@ViewData["SortBy"]"
+                           asp-route-sortOrder="@ViewData["SortOrder"]">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                    <a class="page-link" 
+                       asp-action="Index" 
+                       asp-route-pageNumber="@(Model.PageNumber + 1)"
+                       asp-route-searchTerm="@ViewData["SearchTerm"]"
+                       asp-route-isActive="@ViewData["IsActive"]"
+                       asp-route-sortBy="@ViewData["SortBy"]"
+                       asp-route-sortOrder="@ViewData["SortOrder"]">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+
+@section Scripts{
+    <script src="~/js/common/toast.js"></script>
+    <script src="~/js/common/confirm_popup.js"></script>
+
+}
+@if (TempData["ToastMessage"] != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showToast(
+                "@TempData["ToastType"]",
+                "@TempData["ToastMessage"]"
+            );
+        });
+    </script>
+}

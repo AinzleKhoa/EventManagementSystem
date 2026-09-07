@@ -1,0 +1,72 @@
+@model WebClient.DTOs.Response.ReadVoucherDTO
+@{
+    ViewData["Title"] = "Delete Voucher";
+    Layout = "_LayoutStaff";
+}
+
+<style>
+    .card-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+</style>
+
+<div class="mb-4">
+    <a asp-action="Index" class="text-decoration-none text-muted fw-medium mb-2 d-inline-block">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Vouchers
+    </a>
+</div>
+
+<div class="card-section border-top border-danger border-4">
+    <div class="text-center mb-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle mb-3" style="width: 80px; height: 80px;">
+            <i class="fa-solid fa-triangle-exclamation fa-3x"></i>
+        </div>
+        <h4 class="fw-bold">Delete Voucher Confirmation</h4>
+        <p class="text-muted">Are you sure you want to permanently delete this voucher? This action cannot be undone.</p>
+    </div>
+
+    <div class="bg-light rounded p-4 mb-4">
+        <div class="row text-center mb-3">
+            <div class="col-4">
+                <span class="text-muted d-block small fw-bold text-uppercase">Code</span>
+                <span class="fw-bold text-primary fs-5">@Model.Code</span>
+            </div>
+            <div class="col-4 border-start border-end">
+                <span class="text-muted d-block small fw-bold text-uppercase">Discount</span>
+                <span class="fw-bold">@Model.DiscountValue @(Model.DiscountType == "Percent" ? "%" : "VND")</span>
+            </div>
+            <div class="col-4">
+                <span class="text-muted d-block small fw-bold text-uppercase">Remaining</span>
+                <span class="fw-bold text-success">@(Model.Quantity - Model.UsedCount) left</span>
+            </div>
+        </div>
+
+        <div class="row text-center mt-3 border-top pt-3">
+            
+            <div class="col-4 border-start border-end">
+                <span class="text-muted d-block small fw-bold text-uppercase">Valid From</span>
+                <span class="fw-bold text-dark">@(Model.ValidFrom?.ToString("dd/MM/yyyy") ?? "N/A")</span>
+            </div>
+            <div class="col-4">
+                <span class="text-muted d-block small fw-bold text-uppercase">Valid To</span>
+                <span class="fw-bold text-dark">@(Model.ValidTo?.ToString("dd/MM/yyyy") ?? "N/A")</span>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="Delete" method="post" class="d-flex justify-content-center gap-3">
+        <input type="hidden" name="id" value="@Model.VoucherId" />
+
+        <a asp-action="Index" class="btn btn-reset px-4">
+            Cancel
+        </a>
+        <button type="submit" class="btn btn-danger px-4 rounded-3 fw-semibold shadow-sm">
+            <i class="fa-solid fa-trash-can me-2"></i> Yes, Delete It
+        </button>
+    </form>
+</div>

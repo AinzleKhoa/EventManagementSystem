@@ -1,0 +1,411 @@
+@page "/events/validators/{id}"
+@model WebClient.Views.Events.ValidatorsModel
+@{
+    ViewData["Title"] = "Manage Validators";
+    Layout = "_LayoutStaff";
+}
+
+<style>
+    .validator-detail-card {
+        background: white;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: transform 0.2s;
+    }
+
+    .validator-detail-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748b;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .validator-detail-value {
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: #1e293b;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        border: 1px solid #e2e8f0;
+        padding: 0.75rem 0.875rem;
+        font-size: 0.95rem;
+        border-radius: 6px;
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .invalid-feedback {
+        display: block;
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .btn-validator-add {
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .btn-validator-add:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+    }
+
+    .badge-status {
+        padding: 0.6em 0.8em;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .table-header-custom {
+        background-color: #f8fafc;
+        font-weight: 700;
+        color: #1e293b;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .table-row-custom {
+        transition: background-color 0.2s;
+    }
+
+    .table-row-custom:hover {
+        background-color: #f8fafc;
+    }
+
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+
+    .toast-custom {
+        min-width: 300px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 1rem 1.5rem;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .toast-success {
+        border-left: 4px solid #28a745;
+        color: #155724;
+    }
+
+    .toast-error {
+        border-left: 4px solid #dc3545;
+        color: #721c24;
+    }
+
+    .toast-warning {
+        border-left: 4px solid #ffc107;
+        color: #856404;
+    }
+
+    .toast-icon {
+        font-size: 1.25rem;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <a href="/events/details/@Model.EventId" class="text-decoration-none text-muted mb-2 d-inline-block small">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Details
+            </a>
+            <h2 class="fw-bold text-dark mb-1">Manage Validators</h2>
+            @if (Model.Event != null)
+            {
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-info text-white" style="font-size: 0.9rem; padding: 0.6em 1em;">
+                        <i class="fa-solid fa-calendar me-1"></i> @Model.Event.Title
+                    </span>
+                    <span class="text-muted small">
+                        <i class="fa-solid fa-clock me-1"></i>
+                        @Model.Event.StartDate.ToString("dd/MM/yyyy HH:mm") - @Model.Event.EndDate.ToString("dd/MM/yyyy HH:mm")
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-5 mb-4">
+            <div class="validator-detail-card">
+                <div class="card-header p-4 border-bottom" style="background-color: #f8fafc;">
+                    <h5 class="card-title mb-0 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-primary"></i> Add New Validator
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form id="addValidatorForm">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label for="validatorEmail" class="form-label">
+                                <i class="fa-solid fa-envelope me-2"></i> Email Validator
+                            </label>
+                            <input type="email" class="form-control" id="validatorEmail" name="validatorEmail" 
+                                   placeholder="validator@example.com" required />
+                            <small class="text-muted d-block mt-2">Enter the email of the person you want to add as a validator</small>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-validator-add w-100" onclick="addValidator()">
+                            <i class="fa-solid fa-check-circle me-2"></i> Add Validator
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7 mb-4">
+            <div class="validator-detail-card">
+                <div class="card-header p-4 border-bottom" style="background-color: #f8fafc;">
+                    <h5 class="card-title mb-0 d-flex align-items-center justify-content-between">
+                        <span>
+                            <i class="fa-solid fa-list-check text-primary me-2"></i> Validators List
+                        </span>
+                        <span class="badge bg-primary" style="font-size: 0.85rem;">@Model.Validators.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.Validators.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr class="table-header-custom">
+                                        <th style="width: 35%;"><i class="fa-solid fa-envelope me-2"></i> Email</th>
+                                        <th style="width: 25%;"><i class="fa-solid fa-plus me-2"></i> Added On</th>
+                                        <th style="width: 25%;"><i class="fa-solid fa-hourglass-end me-2"></i> Expires</th>
+                                        <th style="width: 15%;" class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var validator in Model.Validators)
+                                    {
+                                        <tr class="table-row-custom">
+                                            <td>
+                                                <strong>@validator.StaffEmail</strong>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@validator.AssignedAt?.ToString("dd/MM/yyyy HH:mm")</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-status @(validator.ExpiredAt >= DateTime.Now ? "bg-success" : "bg-danger")">
+                                                    @validator.ExpiredAt?.ToString("dd/MM/yyyy HH:mm")
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        title="Delete validator"
+                                                        onclick="removeValidator(@validator.EventStaffId, '@validator.StaffEmail')">
+                                                    <i class="fa-solid fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fa-solid fa-inbox text-muted" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                            <p class="text-muted mt-3 mb-0">No validators have been added to this event yet</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+@section Scripts {
+    <script>
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+            
+            let icon = 'fa-info-circle';
+            let typeClass = 'toast-warning';
+            
+            if (type === 'success') {
+                icon = 'fa-check-circle';
+                typeClass = 'toast-success';
+            } else if (type === 'danger' || type === 'error') {
+                icon = 'fa-exclamation-circle';
+                typeClass = 'toast-error';
+            } else if (type === 'warning') {
+                icon = 'fa-exclamation-triangle';
+                typeClass = 'toast-warning';
+            }
+            
+            const toastHTML = `
+                <div id="${toastId}" class="toast-custom ${typeClass}">
+                    <i class="fa-solid ${icon} toast-icon"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', toastHTML);
+            
+            setTimeout(() => {
+                const toast = document.getElementById(toastId);
+                if (toast) {
+                    toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 0.3s ease-out';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 4000);
+        }
+
+        @if (TempData["ToastMessage"] != null)
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                const message = '@Html.Raw(TempData["ToastMessage"])';
+                const type = '@TempData["ToastType"]';
+                showToast(message, type);
+            });
+            </text>
+        }
+
+        document.getElementById('validatorEmail')?.addEventListener('blur', function() {
+            const email = this.value.trim();
+            const emailRegex = /^[a-z0-9._%+\-]+@@[a-z0-9.\-]+\.[a-z]{2,}$/i;
+            if (email && !emailRegex.test(email)) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+
+         async function addValidator() {
+             const email = document.getElementById('validatorEmail').value.trim();
+             const eventId = @Model.EventId;
+
+             if (!email) {
+                 showToast('❌ Email cannot be empty', 'danger');
+                 return;
+             }
+
+             const emailRegex = /^[a-z0-9._%+\-]+@@[a-z0-9.\-]+\.[a-z]{2,}$/i;
+             if (!emailRegex.test(email)) {
+                 showToast('❌ Invalid email format', 'danger');
+                 return;
+             }
+
+             try {
+                 const formData = new FormData();
+                 formData.append('validatorEmail', email);
+
+                 const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                 formData.append('__RequestVerificationToken', token);
+
+                 const response = await fetch(`/events/validators/${eventId}?handler=AddValidator`, {
+                     method: 'POST',
+                     body: formData
+                 });
+
+                 console.log('Response status:', response.status);
+                 console.log('Response headers:', response.headers);
+
+                 let data;
+                 const contentType = response.headers.get('content-type');
+
+                 if (contentType && contentType.includes('application/json')) {
+                     data = await response.json();
+                 } else {
+                     const text = await response.text();
+                     console.error('Response is not JSON. Raw response:', text);
+                     showToast('❌ Server error: Response is not JSON', 'danger');
+                     return;
+                 }
+
+                 if (response.ok && data.success) {
+                     showToast(data.message, 'success');
+                     document.getElementById('validatorEmail').value = '';
+                     setTimeout(() => location.reload(), 1000);
+                 } else {
+                     const errorMsg = data.message || 'Error adding validator. Please try again.';
+                     showToast(errorMsg, 'danger');
+                 }
+             } catch (error) {
+                 console.error('Error:', error);
+                 showToast('❌ Error: ' + error.message, 'danger');
+             }
+         }
+
+         async function removeValidator(eventStaffId, email) {
+             if (!confirm('Are you sure you want to delete this validator? Email: ' + email)) {
+                 return;
+             }
+
+             const eventId = @Model.EventId;
+             try {
+                 const formData = new FormData();
+                 formData.append('eventStaffId', eventStaffId);
+
+                 const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                 formData.append('__RequestVerificationToken', token);
+
+                 const response = await fetch(`/events/validators/${eventId}?handler=RemoveValidator`, {
+                     method: 'POST',
+                     body: formData
+                 });
+
+                 console.log('Response status:', response.status);
+                 console.log('Response headers:', response.headers);
+
+                 let data;
+                 const contentType = response.headers.get('content-type');
+
+                 if (contentType && contentType.includes('application/json')) {
+                     data = await response.json();
+                 } else {
+                     const text = await response.text();
+                     console.error('Response is not JSON. Raw response:', text);
+                     showToast('❌ Server error: Response is not JSON', 'danger');
+                     return;
+                 }
+
+                 if (response.ok && data.success) {
+                     showToast(data.message, 'success');
+                     setTimeout(() => location.reload(), 1000);
+                 } else {
+                     const errorMsg = data.message || 'Error deleting validator. Please try again.';
+                     showToast(errorMsg, 'danger');
+                 }
+             } catch (error) {
+                 console.error('Error:', error);
+                 showToast('❌ Error: ' + error.message, 'danger');
+             }
+         }
+    </script>
+}

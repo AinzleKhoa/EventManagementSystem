@@ -1,0 +1,158 @@
+﻿/* --- Hero Section --- */
+.hero-section {
+    /* Chừa khoảng trống cho Fixed Navbar */
+    margin-top: -20px;
+    background: linear-gradient(135deg, rgba(30, 27, 75, 0.9), rgba(79, 70, 229, 0.8)), url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+    background-size: cover;
+    background-position: center;
+    padding: 140px 0 100px; /* Tăng padding-top để tránh bị Navbar che */
+    color: white;
+    border-radius: 0 0 50px 50px;
+    margin-bottom: 60px;
+}
+
+.search-container {
+    background: white;
+    padding: 10px;
+    border-radius: 50px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.search-input {
+    border: none;
+    box-shadow: none;
+    padding-left: 20px;
+    font-size: 1rem;
+}
+
+    .search-input:focus {
+        box-shadow: none;
+    }
+
+.btn-search {
+    border-radius: 50px;
+    padding: 10px 40px;
+    background-color: var(--accent-color);
+    border: none;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+    .btn-search:hover {
+        background-color: #e11d48;
+    }
+
+/* --- Event Cards --- */
+.event-card {
+    border: none;
+    border-radius: var(--card-radius);
+    transition: all 0.3s ease;
+    background: white;
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+    .event-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .event-card img {
+        height: 220px;
+        width: 100%;
+        object-fit: cover;
+        transition: 0.5s;
+    }
+
+    .event-card:hover img {
+        transform: scale(1.05);
+    }
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* --- Wishlist Button (Trang chủ) --- */
+.wishlist-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+    /* Ép cứng màu xám mặc định, không cho phép biến thành màu trắng hay đen */
+    .wishlist-btn i {
+        color: #9ca3af !important;
+        font-size: 1.2rem;
+        transition: 0.3s;
+    }
+
+    /* Đậm lên chút khi đưa chuột vào */
+    .wishlist-btn:hover i {
+        color: #6b7280 !important;
+    }
+
+    /* Khi đã lưu (active) -> Ép cứng màu Đỏ */
+    .wishlist-btn.active i {
+        color: #e11d48 !important;
+    }
+.event-date {
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.event-price {
+    font-weight: 700;
+    color: #10b981;
+    font-size: 1.1rem;
+}
+
+/* --- List Items & Promo --- */
+.hover-shadow:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-2px);
+}
+
+.transition {
+    transition: all 0.3s ease;
+}
+
+/* --- Organizer Banner --- */
+.organizer-banner {
+    background: linear-gradient(90deg, #2D2A6E, #1F1D45);
+    color: white;
+    border-radius: 30px;
+    padding: 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+    .organizer-banner::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 200px;
+        height: 200px;
+        background: var(--accent-color);
+        border-radius: 50%;
+        opacity: 0.2;
+        filter: blur(50px);
+    }

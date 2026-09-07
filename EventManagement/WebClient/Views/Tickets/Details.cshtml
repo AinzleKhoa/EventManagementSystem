@@ -1,0 +1,266 @@
+@model IEnumerable<WebClient.DTOs.Response.ReadTicketDTO>
+@{
+    ViewData["Title"] = "Event Tickets List";
+    Layout = "_ticketValidator"; 
+    int totalTickets = Model != null ? Model.Count() : 0;
+    int checkedInTickets = Model != null ? Model.Count(t => t.Status == "CheckedIn") : 0;
+    int activeTickets = totalTickets - checkedInTickets;
+    double checkInPercentage = totalTickets > 0 ? Math.Round((double)checkedInTickets / totalTickets * 100, 1) : 0;
+}
+
+<link rel="stylesheet" href="~/css/common/list_style.css" />
+<link rel="stylesheet" href="~/css/common/page_header_dashboard.css" />
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h3 class="mb-0">
+            <i class="fa-solid fa-ticket-simple me-2"></i>
+            Tickets for Event #@ViewData["EventId"]
+            <span class="stats-badge" id="total-badge">@Model.Count() Tickets</span>
+        </h3>
+    </div>
+    <div class="d-flex gap-3 align-items-center">
+
+        <div class="input-group input-group-sm" style="width: 280px;">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="fa-solid fa-magnifying-glass text-muted"></i>
+            </span>
+            <input type="text" id="searchInput" class="form-control border-start-0 ps-0"
+                   placeholder="Search by code or customer name...">
+        </div>
+
+        <a asp-controller="TicketValidator" asp-action="MyEvents" class="btn btn-sm btn-outline-secondary shadow-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Events 
+        </a>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+            <div class="card-body p-4 d-flex align-items-center">
+                <div style="width: 100px; height: 100px; position: relative;">
+                    <canvas id="checkInChart"></canvas>
+                </div>
+                <div class="ms-4">
+                    <h6 class="text-muted fw-bold text-uppercase mb-1">Check-in Status</h6>
+                    <h3 class="fw-bold mb-0 text-success">@checkedInTickets <span class="fs-6 text-muted fw-normal">/ @totalTickets</span></h3>
+                    <small class="text-success fw-bold"><i class="fa-solid fa-bolt me-1"></i> @checkInPercentage% Completed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-card mt-4">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="ticketTable">
+            <thead>
+                <tr>
+                    <th>Ticket Info</th>
+                    <th>Customer</th> 
+                    <th>Ticket Type</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th> 
+                </tr>
+            </thead>
+            <tbody id="ticketTableBody">
+                @if (Model != null && Model.Any()) 
+                {
+                @foreach (var ticket in Model)
+                {
+                    <tr class="ticket-row">
+                        
+                        <td>
+                            <code class="fw-bold text-dark search-code">@ticket.TicketCode</code>
+                        </td>
+                        <td>
+                            <div class="fw-bold search-name">@ticket.OwnerName</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-primary border">@ticket.TicketType</span>
+                        </td>
+                        <td>
+                            @if (ticket.Status == "Active") 
+                        {
+                        <span class="status-badge status-published">Active</span> }
+                        else if (ticket.Status == "CheckedIn") 
+                        {
+                        <span class="status-badge status-hidden">Checked In</span> 
+                        }
+                        else
+                        {
+                        <span class="status-badge">@ticket.Status</span> 
+                        }
+                    </td>
+                    <td class="text-end">
+                        <a asp-controller="TicketValidator"
+                           asp-action="CheckIn"
+                           [cite_start]asp-route-ticketCode="@ticket.TicketCode" 
+                           [cite_start]class="btn btn-sm btn-primary shadow-sm">
+                            
+                            <i class="fa-solid fa-qrcode me-1"></i> Check-in
+                        </a>
+                    </td>
+                </tr>
+                                }
+                }
+
+                <tr id="noResultsRow" style="display: none;">
+                    <td colspan="5" class="text-center py-5">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-magnifying-glass fa-4x text-muted mb-3 opacity-50"></i>
+                            <h5 class="text-muted">No matching tickets found</h5>
+                            <p class="text-muted small">Try a different ticket code or name.</p>
+                        </div>
+                    </td>
+                </tr>
+
+                @if (Model == null || !Model.Any()) {
+                <tr id="emptyDataRow">
+                    <td colspan="5" class="text-center py-5">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-ticket fa-4x text-muted mb-3 opacity-50"></i>
+                            <h5 class="text-muted">No Tickets Found</h5>
+                            <p class="text-muted small">There are no tickets issued for this event yet.</p> 
+                        </div>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center p-3 border-top">
+        <div class="text-muted small">
+            Showing <span id="range-text" class="fw-bold">0-0</span> of
+            <span id="filtered-total" class="fw-bold">0</span> results
+        </div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0" id="paginationWrapper">
+            </ul>
+        </nav>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/common/toast.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const ctx = document.getElementById('checkInChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Checked In', 'Pending (Active)'],
+                    datasets: [{
+                        data: [@checkedInTickets, @activeTickets], 
+                        backgroundColor: ['#10b981', '#e2e8f0'], 
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%', 
+                    plugins: {
+                        legend: { display: false }, 
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+            
+            const searchInput = document.getElementById('searchInput');
+            const tableBody = document.getElementById('ticketTableBody');
+            const allRows = Array.from(tableBody.querySelectorAll('.ticket-row'));
+            const noResultsRow = document.getElementById('noResultsRow');
+            const rangeText = document.getElementById('range-text');
+            const filteredTotalText = document.getElementById('filtered-total');
+            const paginationWrapper = document.getElementById('paginationWrapper');
+
+            let filteredRows = [...allRows];
+            let currentPage = 1;
+            const pageSize = 10; 
+
+            
+            function updateDisplay() {
+                const totalFiltered = filteredRows.length;
+                const totalPages = Math.ceil(totalFiltered / pageSize);
+
+               
+                allRows.forEach(row => row.style.display = 'none');
+
+                if (totalFiltered === 0) {
+                    if (noResultsRow) noResultsRow.style.display = '';
+                    rangeText.innerText = "0-0";
+                } else {
+                    if (noResultsRow) noResultsRow.style.display = 'none';
+
+                    const startIndex = (currentPage - 1) * pageSize;
+                    const endIndex = Math.min(startIndex + pageSize, totalFiltered);
+
+                    
+                    for (let i = startIndex; i < endIndex; i++) {
+                        filteredRows[i].style.display = '';
+                    }
+
+                    rangeText.innerText = `${startIndex + 1}-${endIndex}`;
+                }
+
+                filteredTotalText.innerText = totalFiltered;
+                renderPagination(totalPages);
+            }
+
+            
+            function renderPagination(totalPages) {
+                paginationWrapper.innerHTML = '';
+                if (totalPages <= 1) return;
+
+                
+                createPageButton('«', currentPage > 1, () => { currentPage--; updateDisplay(); });
+
+                
+                for (let i = 1; i <= totalPages; i++) {
+                    createPageButton(i, true, () => { currentPage = i; updateDisplay(); }, i === currentPage);
+                }
+
+                
+                createPageButton('»', currentPage < totalPages, () => { currentPage++; updateDisplay(); });
+            }
+
+            function createPageButton(text, enabled, callback, isActive = false) {
+                const li = document.createElement('li');
+                li.className = `page-item ${enabled ? '' : 'disabled'} ${isActive ? 'active' : ''}`;
+
+                const btn = document.createElement('a');
+                btn.className = 'page-link';
+                btn.href = '#';
+                btn.innerHTML = text;
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    if (enabled) callback();
+                };
+
+                li.appendChild(btn);
+                paginationWrapper.appendChild(li);
+            }
+
+            
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toLowerCase().trim();
+
+                filteredRows = allRows.filter(row => {
+                    const code = row.querySelector('.search-code').textContent.toLowerCase();
+                    const name = row.querySelector('.search-name').textContent.toLowerCase();
+                    return code.includes(term) || name.includes(term);
+                });
+
+                currentPage = 1; 
+                updateDisplay();
+            });
+
+            
+            updateDisplay();
+        });
+    </script>
+}

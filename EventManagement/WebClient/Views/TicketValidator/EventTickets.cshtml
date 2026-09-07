@@ -1,0 +1,190 @@
+@model List<WebClient.DTOs.Response.ReadTicketDTO>
+@{
+    ViewData["Title"] = "Ticket List - " + ViewBag.EventTitle;
+    Layout = "_LayoutStaff";
+    int eventId = (int)ViewBag.EventId;
+    string eventTitle = ViewBag.EventTitle ?? "Event";
+    string searchTerm = ViewBag.SearchTerm ?? "";
+    string statusFilter = ViewBag.StatusFilter ?? "All";
+    int totalTickets = Model?.Count ?? 0;
+    int checkedIn = Model?.Count(t => t.Status == "CheckedIn" || t.CheckedInAt.HasValue) ?? 0;
+    int notCheckedIn = totalTickets - checkedIn;
+}
+
+<style>
+    .stat-mini-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border-left: 4px solid;
+    }
+    .stat-mini-card.total { border-color: #6366f1; }
+    .stat-mini-card.checked { border-color: #10b981; }
+    .stat-mini-card.pending { border-color: #f59e0b; }
+
+    .ticket-table th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; }
+    .status-badge { padding: 4px 12px; border-radius: 50px; font-size: 0.78rem; font-weight: 600; }
+    .badge-checkedin { background: #dcfce7; color: #166534; }
+    .badge-active { background: #dbeafe; color: #1d4ed8; }
+    .badge-cancelled { background: #fee2e2; color: #b91c1c; }
+
+    .filter-bar { background: white; border-radius: 12px; padding: 1rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 1.5rem; }
+    .ticket-code { font-family: monospace; font-size: 0.78rem; color: #64748b; }
+</style>
+
+<div class="mb-4">
+    <a asp-action="MyEvents" class="text-decoration-none text-muted mb-2 d-inline-block">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to My Events
+    </a>
+    <div class="d-flex justify-content-between align-items-center mt-1">
+        <div>
+            <h3 class="fw-bold mb-0"><i class="fa-solid fa-ticket me-2 text-primary"></i>@eventTitle</h3>
+            <p class="text-muted mb-0 small"><i class="fa-regular fa-calendar me-1"></i>@ViewBag.EventStartDate?.ToString("dd/MM/yyyy HH:mm")</p>
+        </div>
+        <a asp-action="Statistics" asp-route-eventId="@eventId" class="btn btn-outline-primary btn-sm">
+            <i class="fa-solid fa-chart-bar me-1"></i>View Statistics
+        </a>
+    </div>
+</div>
+
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-mini-card total">
+            <div class="text-muted small fw-bold text-uppercase mb-1">Total Tickets</div>
+            <h4 class="fw-bold mb-0 text-primary">@totalTickets</h4>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-mini-card checked">
+            <div class="text-muted small fw-bold text-uppercase mb-1">Checked In</div>
+            <h4 class="fw-bold mb-0 text-success">@checkedIn</h4>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-mini-card pending">
+            <div class="text-muted small fw-bold text-uppercase mb-1">Not Checked In</div>
+            <h4 class="fw-bold mb-0 text-warning">@notCheckedIn</h4>
+        </div>
+    </div>
+</div>
+
+
+<div class="filter-bar d-flex gap-3 align-items-center flex-wrap">
+    <form method="get" class="d-flex gap-2 align-items-center flex-wrap w-100">
+        <input type="hidden" name="eventId" value="@eventId" />
+        <div class="input-group" style="max-width: 320px;">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="fa-solid fa-search text-muted"></i>
+            </span>
+            <input type="text" name="searchTerm" class="form-control border-start-0"
+                   placeholder="Search by owner name or ticket code..."
+                   value="@searchTerm" />
+        </div>
+        <select name="status" class="form-select" style="max-width: 160px;">
+            <option value="All" selected="@(statusFilter == "All")">All Status</option>
+            <option value="Active" selected="@(statusFilter == "Active")">Active</option>
+            <option value="CheckedIn" selected="@(statusFilter == "CheckedIn")">Checked In</option>
+            <option value="Cancelled" selected="@(statusFilter == "Cancelled")">Cancelled</option>
+        </select>
+        <button type="submit" class="btn btn-primary px-4">
+            <i class="fa-solid fa-filter me-1"></i>Filter
+        </button>
+        @if (!string.IsNullOrEmpty(searchTerm) || (statusFilter != "All" && !string.IsNullOrEmpty(statusFilter)))
+        {
+            <a asp-action="EventTickets" asp-route-eventId="@eventId" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-times me-1"></i>Clear
+            </a>
+        }
+    </form>
+</div>
+
+
+<div class="bg-white rounded-3 shadow-sm p-4">
+    @if (Model != null && Model.Any())
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted small">Showing <strong>@Model.Count</strong> ticket(s)</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle ticket-table">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Ticket Code</th>
+                        <th>Owner</th>
+                        <th>Ticket Type</th>
+                        <th class="text-center">Status</th>
+                        <th>Checked-In At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int rowNum = 1; }
+                    @foreach (var ticket in Model)
+                    {
+                        <tr>
+                            <td class="text-muted">@rowNum</td>
+                            <td><span class="ticket-code">@ticket.TicketCode.ToString().ToUpper()</span></td>
+                            <td>
+                                <span class="fw-semibold">
+                                    @(string.IsNullOrEmpty(ticket.OwnerName) ? "N/A" : ticket.OwnerName)
+                                </span>
+                            </td>
+                            <td>
+                                @if (ticket.TicketType != null)
+                                {
+                                    <span class="badge bg-light text-dark border">@ticket.TicketType.TypeName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @{
+                                    bool isCheckedIn = ticket.Status == "CheckedIn" || ticket.CheckedInAt.HasValue;
+                                    string badgeClass = isCheckedIn ? "badge-checkedin" :
+                                                        (ticket.Status == "Cancelled" ? "badge-cancelled" : "badge-active");
+                                    string statusLabel = isCheckedIn ? "Checked In" : (ticket.Status ?? "Active");
+                                }
+                                <span class="status-badge @badgeClass">@statusLabel</span>
+                            </td>
+                            <td>
+                                @if (ticket.CheckedInAt.HasValue)
+                                {
+                                    <span class="text-success small">
+                                        <i class="fa-solid fa-check me-1"></i>
+                                        @ticket.CheckedInAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                        </tr>
+                        rowNum++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fa-solid fa-ticket fa-3x text-muted opacity-50 mb-3"></i>
+            <h6 class="text-muted fw-bold">No tickets found</h6>
+            <p class="text-muted small">
+                @if (!string.IsNullOrEmpty(searchTerm) || statusFilter != "All")
+                {
+                    <span>No tickets match your search. <a asp-action="EventTickets" asp-route-eventId="@eventId">Clear filters</a></span>
+                }
+                else
+                {
+                    <span>No tickets have been issued for this event yet.</span>
+                }
+            </p>
+        </div>
+    }
+</div>

@@ -1,0 +1,163 @@
+﻿ @{
+    Layout = "_Layout.cshtml"; // Kế thừa layout chính (có Header/Footer)
+    var fullName = User.Identity?.Name ?? "User";
+    var avatarUrl = User.FindFirst("AvatarUrl")?.Value;
+    var isGoogleAccount = User.FindFirst("isGoogleAccount")?.Value == "true";
+    if (string.IsNullOrEmpty(avatarUrl))
+    {
+        avatarUrl = "/images/default-avatar.png";
+    }
+}
+
+<style>
+    :root {
+        --primary-color: #6366f1;
+        --accent-color: #f43f5e;
+    }
+
+    /* Sidebar Styles */
+    .profile-sidebar {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        height: 100%; /* Để sidebar dài bằng content nếu cần */
+    }
+
+    .user-badge {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+        .user-badge img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #e0e7ff;
+            margin-bottom: 1rem;
+        }
+
+    /* Nav items */
+    .nav-pills .nav-link-profile {
+        color: #64748b;
+        font-weight: 500;
+        padding: 0.8rem 1.2rem;
+        margin-bottom: 0.5rem;
+        border-radius: 10px;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+    }
+
+        .nav-pills .nav-link-profile:hover {
+            background-color: #f1f5f9;
+            color: var(--primary-color);
+        }
+
+        .nav-pills .nav-link-profile.active {
+            background: linear-gradient(90deg, var(--primary-color), #4f46e5);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .nav-pills .nav-link-profile i {
+            width: 20px;
+            text-align: center;
+        }
+
+    /* Avatar Upload Overlay */
+    .avatar-wrapper {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1rem;
+        cursor: pointer;
+    }
+
+    .avatar-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        opacity: 0;
+        transition: 0.2s;
+    }
+
+    .avatar-wrapper:hover .avatar-overlay {
+        opacity: 1;
+    }
+</style>
+
+<div class="container py-5 mt-5">
+    <div class="row g-4">
+
+        <div class="col-lg-3">
+            <div class="profile-sidebar">
+                <div class="user-badge">
+                    <div class="avatar-wrapper shadow-sm" data-bs-toggle="modal" data-bs-target="#avatarUploadModal">
+                        <img src="@avatarUrl" alt="Profile">
+                        <div class="avatar-overlay">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                    </div>
+                    <h6 class="fw-bold mb-1">@fullName</h6>
+                </div>
+
+                <div class="nav flex-column nav-pills">
+                    @{
+                        // Logic đơn giản để check Active Link
+                        string currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+                        string currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+
+                        string IsActive(string actionName) => currentAction == actionName ? "active" : "";
+                    }
+
+                    <a asp-controller="Profile" asp-action="Index" class="nav-link-profile @IsActive("Index")">
+                        <i class="fa-regular fa-user"></i> Personal Info
+                    </a>
+
+                    <a asp-controller="Profile" asp-action="MyOrders" class="nav-link-profile @IsActive("MyOrders")">
+                        <i class="fa-solid fa-ticket"></i> My Orders
+                    </a>
+
+                    @* <a asp-controller="Profile" asp-action="Wishlist" class="nav-link-profile @IsActive("Wishlist")">
+                        <i class="fa-regular fa-heart"></i> Wishlist
+                        <span class="badge bg-danger rounded-pill ms-auto">3</span>
+                    </a> *@
+                    @if (User.FindFirst("isGoogleAccount")?.Value != "true")
+                    {
+                        <a asp-controller="Profile" asp-action="ChangePassword" class="nav-link-profile @IsActive("ChangePassword")">
+                            <i class="fa-solid fa-lock"></i> Change Password
+                        </a>
+                    }
+                    <hr class="my-3 border-secondary opacity-10">
+
+                    <form asp-controller="Profile" asp-action="Logout" method="get" class="d-grid">
+                        <button type="submit" class="nav-link-profile text-danger bg-transparent border-0 w-100">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            @RenderBody()
+        </div>
+
+    </div>
+</div>
+
+@await RenderSectionAsync("Scripts", required: false)

@@ -1,0 +1,421 @@
+﻿@using WebClient.DTOs.Response
+@using WebClient.ViewModel
+@model SearchViewModel
+
+@{
+    ViewData["Title"] = "Find Events";
+    Layout = "_Layout";
+}
+
+<style>
+    /* CSS KEPT AS IS */
+    :root {
+        --primary-color: #6366f1;
+        --accent-color: #f43f5e;
+        --card-border-radius: 16px;
+    }
+
+    .filter-sidebar {
+        background: white;
+        border-radius: var(--card-border-radius);
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        position: sticky;
+        top: 90px;
+    }
+
+    .filter-title {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 1.2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .event-card {
+        border: none;
+        border-radius: var(--card-border-radius);
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+        background: white;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+    .card-img-wrapper {
+        position: relative;
+        height: 180px;
+        overflow: hidden;
+    }
+
+    .card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s;
+    }
+
+    .event-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+
+    .date-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        padding: 6px 12px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+        .date-badge .month {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--accent-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .date-badge .day {
+            display: block;
+            font-size: 1.2rem;
+            color: #1e293b;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+    .btn-wishlist {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: white;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: 0.2s;
+    }
+
+        .btn-wishlist:hover, .btn-wishlist.active {
+            color: var(--accent-color);
+            background: #fff0f3;
+        }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    .event-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-decoration: none;
+    }
+
+        .event-title:hover {
+            color: var(--primary-color);
+        }
+
+    .event-meta {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .card-footer {
+        background: white;
+        border-top: 1px solid #f1f5f9;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .organizer-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 6px;
+    }
+
+    .event-price {
+        font-weight: 700;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+    }
+</style>
+
+<div class="container py-5 mt-5">
+    <div class="row g-4">
+
+        <div class="col-lg-3">
+            <aside class="filter-sidebar">
+                <form id="filterForm" method="get" asp-action="Search" asp-controller="Home">
+
+                    <input type="hidden" name="page" id="pageInput" value="@Model.CurrentPage" />
+                    <input type="hidden" name="sortOption" id="sortInput" value="@ViewBag.SortOption" />
+
+                    <div class="filter-title">
+                        <span>Filters</span>
+                        <a href="@Url.Action("Search", "Home")" class="text-decoration-none small text-secondary fw-normal">Reset</a>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                            <input type="text" name="query" value="@Model.Query" class="form-control bg-light border-start-0" placeholder="Event name...">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase mb-3">Availability</label>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="eventStatus" value="available" id="statusAvailable"
+                                @(((ViewBag.EventStatus as string) ?? "available") == "available" ? "checked" : "")>
+                                <label class="form-check-label" for="statusAvailable">Available events</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="eventStatus" value="ended" id="statusEnded"
+                                @(ViewBag.EventStatus as string == "ended" ? "checked" : "")>
+                                <label class="form-check-label" for="statusEnded">Ended events</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase mb-3">Categories</label>
+                        <div class="d-flex flex-column gap-2">
+                            @if (Model.Categories != null && Model.Categories.Any())
+                            {
+                                foreach (var cat in Model.Categories)
+                                {
+                                    bool isChecked = Model.SelectedCategoryIds.Contains(cat.CategoryId);
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="categoryIds"
+                                               value="@cat.CategoryId"
+                                               id="cat_@cat.CategoryId"
+                                        @(isChecked ? "checked" : "")>
+                                        <label class="form-check-label" for="cat_@cat.CategoryId">
+                                            @cat.CategoryName
+                                        </label>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="small text-muted">No categories loaded.</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase mb-3">Date</label>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="dateFilter" value="" id="date1"
+                                @(string.IsNullOrEmpty(ViewBag.DateFilter as string) ? "checked" : "")>
+                                <label class="form-check-label" for="date1">Any Date</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="dateFilter" value="today" id="date2"
+                                @(ViewBag.DateFilter as string == "today" ? "checked" : "")>
+                                <label class="form-check-label" for="date2">Today</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="dateFilter" value="tomorrow" id="date3"
+                                @(ViewBag.DateFilter as string == "tomorrow" ? "checked" : "")>
+                                <label class="form-check-label" for="date3">Tomorrow</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="dateFilter" value="weekend" id="date4"
+                                @(ViewBag.DateFilter as string == "weekend" ? "checked" : "")>
+                                <label class="form-check-label" for="date4">This Weekend</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase mb-3">Price Range</label>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-5">
+                                <input type="number" name="minPrice" value="@ViewBag.MinPrice" class="form-control form-control-sm" placeholder="Min">
+                            </div>
+                            <div class="col-2 text-center text-muted">-</div>
+                            <div class="col-5">
+                                <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" class="form-control form-control-sm" placeholder="Max">
+                            </div>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" name="freeOnly" value="true" id="freeOnly"
+                            @(ViewBag.FreeOnly == true ? "checked" : "")>
+                            <label class="form-check-label small" for="freeOnly">Free events only</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" onclick="document.getElementById('pageInput').value = 1;" class="btn btn-primary w-100 fw-bold py-2 mt-2">Apply Filters</button>
+                </form>
+            </aside>
+        </div>
+
+        <div class="col-lg-9" id="searchResults">
+            <partial name="_SearchResults" model="Model" />
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const filterForm = document.getElementById('filterForm');
+        const pageInput = document.getElementById('pageInput');
+        const sortInput = document.getElementById('sortInput');
+        const resultsContainer = document.getElementById('searchResults');
+        let searchTimer = null;
+
+        function buildSearchParams(pageNumber) {
+            pageInput.value = pageNumber;
+            const sortSelect = document.getElementById('sortSelect');
+            if (sortSelect) {
+                sortInput.value = sortSelect.value;
+            }
+
+            return new URLSearchParams(new FormData(filterForm));
+        }
+
+        async function loadSearchResults(pageNumber = 1, updateUrl = true) {
+            const params = buildSearchParams(pageNumber);
+            resultsContainer.style.opacity = '0.55';
+
+            try {
+                const response = await fetch(`/Home/SearchResults?${params.toString()}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    filterForm.submit();
+                    return;
+                }
+
+                resultsContainer.innerHTML = await response.text();
+                if (updateUrl) {
+                    window.history.replaceState(null, '', `/Home/Search?${params.toString()}`);
+                }
+            } catch (error) {
+                console.error('Live search failed:', error);
+                filterForm.submit();
+            } finally {
+                resultsContainer.style.opacity = '1';
+            }
+        }
+
+        function scheduleSearch() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => loadSearchResults(1), 300);
+        }
+
+        filterForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            loadSearchResults(1);
+        });
+
+        filterForm.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+            input.addEventListener('input', scheduleSearch);
+        });
+
+        filterForm.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+            input.addEventListener('change', () => loadSearchResults(1));
+        });
+
+        document.addEventListener('change', function (event) {
+            if (event.target && event.target.id === 'sortSelect') {
+                sortInput.value = event.target.value;
+                loadSearchResults(1);
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            const pageLink = event.target.closest('[data-search-page]');
+            if (!pageLink || pageLink.closest('.page-item.disabled')) {
+                return;
+            }
+
+            event.preventDefault();
+            loadSearchResults(parseInt(pageLink.dataset.searchPage));
+        });
+
+        function goToPage(pageNumber) {
+            loadSearchResults(pageNumber);
+        }
+
+        // Function to handle adding/removing from Wishlist
+        async function toggleWishlist(eventId, element) {
+            // Check if the element has the active class (adding or removing)
+            const isAdding = !element.classList.contains('active');
+
+            try {
+                // Call the WishlistController API
+                const response = await fetch('/Wishlist/ToggleWishlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        eventId: eventId,
+                        isAdding: isAdding
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // If successful -> toggle heart color
+                    element.classList.toggle('active');
+                    showToast("success", isAdding ? "Event saved to wishlist!" : "Event removed from wishlist!");
+                }
+                else if (data.message === "unauthorized") {
+                    showToast("error", "Please log in to save events!");
+                    // window.location.href = '/Authentication/Login'; // Optional redirect
+                }
+                else {
+                    showToast("error", "An error occurred, could not save.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                showToast("error", "Unable to connect to the server.");
+            }
+        }
+    </script>
+}

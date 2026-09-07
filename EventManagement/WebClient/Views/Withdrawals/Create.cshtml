@@ -1,0 +1,387 @@
+@model WebClient.DTOs.Request.CreateWithdrawalDTO
+@{
+    ViewData["Title"] = "New Withdrawal Request";
+    Layout = "_LayoutStaff";
+    var eligibleEvents = ViewBag.EligibleEvents as List<WebClient.DTOs.Response.ReadEventDTO> ?? new List<WebClient.DTOs.Response.ReadEventDTO>();
+}
+
+<style>
+    .card-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+    .section-header {
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .form-label { font-weight: 600; font-size: 0.9rem; color: #475569; }
+    .form-control, .form-select {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+    /* Searchable bank dropdown */
+    .bank-dropdown-wrapper { position: relative; }
+    .bank-display-btn {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+        background: white;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: border-color 0.15s;
+        user-select: none;
+    }
+    .bank-display-btn:focus,
+    .bank-display-btn:focus-visible {
+        outline: none;
+        border-color: var(--primary-color, #6366f1);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+    .bank-dropdown-menu {
+        display: none;
+        position: absolute;
+        z-index: 1050;
+        width: 100%;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        overflow: hidden;
+        top: calc(100% + 4px);
+        left: 0;
+    }
+    .bank-dropdown-menu.open { display: block; }
+    .bank-search-box {
+        position: sticky;
+        top: 0;
+        background: white;
+        padding: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        z-index: 1;
+    }
+    .bank-search-box input {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.45rem 0.75rem;
+        font-size: 0.85rem;
+        outline: none;
+    }
+    .bank-search-box input:focus { border-color: var(--primary-color, #6366f1); }
+    .bank-list { max-height: 220px; overflow-y: auto; }
+    .bank-item {
+        padding: 0.55rem 1rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: background 0.1s;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .bank-item:last-child { border-bottom: none; }
+    .bank-item:hover { background: #f1f5f9; }
+    .bank-item-code { font-weight: 700; color: #4f46e5; }
+    .bank-loading, .bank-empty {
+        padding: 1rem;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.85rem;
+    }
+    input[readonly].form-control {
+        background-color: #f8fafc;
+        cursor: not-allowed;
+        color: #475569;
+    }
+</style>
+
+<div class="mb-4">
+    <a asp-action="Index" class="text-decoration-none text-muted fw-medium mb-2 d-inline-block">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to My Requests
+    </a>
+</div>
+
+<form asp-action="Create" method="post" id="createForm">
+    <div class="card-section">
+        <div class="section-header">
+            <h5 class="fw-bold mb-0">
+                <i class="fa-solid fa-money-bill-transfer me-2 text-primary"></i>
+                Withdrawal Request Information
+            </h5>
+        </div>
+
+        <div class="row g-4">
+
+            @* 1. Event Dropdown *@
+            <div class="col-md-6">
+                <label class="form-label">Event <span class="text-danger">*</span></label>
+                <select asp-for="EventId" id="eventSelect" class="form-select">
+                    <option value="">-- Select an event --</option>
+                    @foreach (var ev in eligibleEvents)
+                    {
+                        <option value="@ev.EventId">@ev.Title</option>
+                    }
+                </select>
+                <span id="eventError" class="text-danger small"></span>
+                @if (!eligibleEvents.Any())
+                {
+                    <small class="text-muted d-block mt-1">
+                        <i class="fa-solid fa-circle-info me-1"></i>
+                        No eligible events found (either all events have been withdrawn, or you have no approved events).
+                    </small>
+                }
+            </div>
+
+            @* 2. Amount (readonly, auto-calculated) *@
+            <div class="col-md-6">
+                <label class="form-label">Amount (VND) <span class="text-danger">*</span></label>
+                <input asp-for="Amount" id="amountInput" type="number" class="form-control"
+                       readonly placeholder="Select an event to auto-calculate" />
+                <small class="text-muted d-block mt-1">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    Đã trừ 10% phí dịch vụ nền tảng
+                </small>
+                <span asp-validation-for="Amount" class="text-danger small"></span>
+            </div>
+
+            @* 3. Bank Name – Searchable Dropdown *@
+            <div class="col-md-6">
+                <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                <input type="hidden" asp-for="BankName" id="BankName" />
+                <div class="bank-dropdown-wrapper" id="bankDropdownWrapper">
+                    <div class="bank-display-btn" id="bankDisplayBtn" tabindex="0" role="combobox"
+                         aria-haspopup="listbox" aria-expanded="false">
+                        <span id="bankDisplayText" class="text-muted">-- Select a bank --</span>
+                        <i class="fa-solid fa-chevron-down text-muted small"></i>
+                    </div>
+                    <div class="bank-dropdown-menu" id="bankDropdownMenu" role="listbox">
+                        <div class="bank-search-box">
+                            <input type="text" id="bankSearchInput"
+                                   placeholder="Search by code or bank name..." autocomplete="off" />
+                        </div>
+                        <div class="bank-list" id="bankList">
+                            <div class="bank-loading">Loading banks...</div>
+                        </div>
+                    </div>
+                </div>
+                <span class="text-danger small" id="bankNameError"></span>
+                <span asp-validation-for="BankName" class="text-danger small"></span>
+            </div>
+
+            @* 4. Bank Account Number *@
+            <div class="col-md-6">
+                <label class="form-label">Bank Account Number <span class="text-danger">*</span></label>
+                <input asp-for="BankAccountNumber" type="text" class="form-control" placeholder="e.g. 1234567890" />
+                <span asp-validation-for="BankAccountNumber" class="text-danger small"></span>
+            </div>
+
+            @* 5. Account Holder Name *@
+            <div class="col-12">
+                <label class="form-label">Account Holder Name <span class="text-danger">*</span></label>
+                <input asp-for="BankAccountName" type="text" class="form-control" placeholder="Full name as on bank account" />
+                <span asp-validation-for="BankAccountName" class="text-danger small"></span>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn-dashboard-primary" id="submitBtn">
+            <i class="fa-solid fa-paper-plane me-2"></i> Submit Request
+        </button>
+    </div>
+</form>
+
+@if (TempData["ToastMessage"] != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showToast("@TempData["ToastMessage"]", "@TempData["ToastType"]");
+        });
+    </script>
+}
+<script src="~/js/toast.js"></script>
+
+<script>
+(function () {
+    /* ============================================================
+       State
+    ============================================================ */
+    let allBanks = [];
+
+    /* ============================================================
+       VietQR – Load bank list
+    ============================================================ */
+    async function loadBanks() {
+        try {
+            const res = await fetch('https://api.vietqr.io/v2/banks');
+            const data = await res.json();
+            if (data && Array.isArray(data.data)) {
+                allBanks = data.data;
+                renderBankList(allBanks);
+
+                // If bank name already set (form re-render after validation error),
+                // update the display button text to the stored value
+                const existing = document.getElementById('BankName').value;
+                if (existing) {
+                    setDisplayText(existing);
+                }
+            } else {
+                showBankError('Failed to load bank list.');
+            }
+        } catch (e) {
+            showBankError('Failed to load bank list. Please check your connection.');
+        }
+    }
+
+    function renderBankList(banks) {
+        const list = document.getElementById('bankList');
+        if (!banks.length) {
+            list.innerHTML = '<div class="bank-empty">No banks found.</div>';
+            return;
+        }
+        list.innerHTML = banks.map(b =>
+            `<div class="bank-item" data-code="${escHtml(b.code)}" data-name="${escHtml(b.name)}">
+                <span class="bank-item-code">${escHtml(b.code)}</span> – ${escHtml(b.name)}
+             </div>`
+        ).join('');
+
+        list.querySelectorAll('.bank-item').forEach(el => {
+            el.addEventListener('click', function () {
+                const display = `${this.dataset.code} - ${this.dataset.name}`;
+                document.getElementById('BankName').value = display;
+                setDisplayText(display);
+                closeDropdown();
+                document.getElementById('bankNameError').textContent = '';
+            });
+        });
+    }
+
+    function showBankError(msg) {
+        document.getElementById('bankList').innerHTML =
+            `<div class="bank-empty text-danger">${msg}</div>`;
+    }
+
+    function setDisplayText(text) {
+        const span = document.getElementById('bankDisplayText');
+        span.textContent = text;
+        span.classList.remove('text-muted');
+    }
+
+    function escHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    /* ============================================================
+       Dropdown toggle / close
+    ============================================================ */
+    function openDropdown() {
+        document.getElementById('bankDropdownMenu').classList.add('open');
+        document.getElementById('bankDisplayBtn').setAttribute('aria-expanded', 'true');
+        document.getElementById('bankSearchInput').focus();
+    }
+
+    function closeDropdown() {
+        document.getElementById('bankDropdownMenu').classList.remove('open');
+        document.getElementById('bankDisplayBtn').setAttribute('aria-expanded', 'false');
+        document.getElementById('bankSearchInput').value = '';
+        renderBankList(allBanks);
+    }
+
+    document.getElementById('bankDisplayBtn').addEventListener('click', function () {
+        const isOpen = document.getElementById('bankDropdownMenu').classList.contains('open');
+        isOpen ? closeDropdown() : openDropdown();
+    });
+
+    document.getElementById('bankDisplayBtn').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDropdown(); }
+        if (e.key === 'Escape') closeDropdown();
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!document.getElementById('bankDropdownWrapper').contains(e.target)) {
+            closeDropdown();
+        }
+    });
+
+    /* ============================================================
+       Bank search filter
+    ============================================================ */
+    document.getElementById('bankSearchInput').addEventListener('input', function () {
+        const q = this.value.toLowerCase().trim();
+        const filtered = q
+            ? allBanks.filter(b =>
+                b.code.toLowerCase().includes(q) ||
+                b.name.toLowerCase().includes(q) ||
+                (b.shortName && b.shortName.toLowerCase().includes(q)))
+            : allBanks;
+        renderBankList(filtered);
+    });
+
+    /* ============================================================
+       Event selection → auto-calculate Amount
+    ============================================================ */
+    document.getElementById('eventSelect').addEventListener('change', async function () {
+        const eventId = this.value;
+        const amountInput = document.getElementById('amountInput');
+        document.getElementById('eventError').textContent = '';
+
+        if (!eventId) {
+            amountInput.value = '';
+            return;
+        }
+
+        amountInput.placeholder = 'Calculating...';
+        amountInput.value = '';
+
+        try {
+            const res = await fetch(`/Withdrawals/GetEventRevenue?eventId=${encodeURIComponent(eventId)}`);
+            if (!res.ok) throw new Error('Failed');
+            const data = await res.json();
+            amountInput.value = data.amount;
+            amountInput.placeholder = '';
+        } catch {
+            amountInput.value = '';
+            amountInput.placeholder = 'Could not calculate. Please try again.';
+        }
+    });
+
+    /* ============================================================
+       Form submit validation
+    ============================================================ */
+    document.getElementById('createForm').addEventListener('submit', function (e) {
+        let valid = true;
+
+        const eventId = document.getElementById('eventSelect').value;
+        if (!eventId) {
+            document.getElementById('eventError').textContent = 'Please select an event.';
+            valid = false;
+        }
+
+        const bankName = document.getElementById('BankName').value;
+        if (!bankName) {
+            document.getElementById('bankNameError').textContent = 'Bank name is required.';
+            valid = false;
+        }
+
+        if (!valid) e.preventDefault();
+    });
+
+    /* ============================================================
+       Init
+    ============================================================ */
+    loadBanks();
+})();
+</script>

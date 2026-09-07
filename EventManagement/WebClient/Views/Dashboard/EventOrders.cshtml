@@ -1,0 +1,188 @@
+@model List<WebClient.DTOs.Response.ReadOrderDTO>
+@{
+    ViewData["Title"] = "Event Orders";
+    Layout = "_LayoutStaff";
+
+
+    var firstOrder = Model?.FirstOrDefault();
+    string eventName = ViewBag.EventName ?? "Event Orders";
+    string posterUrl = ViewBag.PosterUrl;
+}
+<link rel="stylesheet" href="~/css/common/page_header_dashboard.css" />
+<style>
+    .order-summary-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        margin-bottom: 2rem;
+    }
+
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .bg-success-subtle {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .bg-warning-subtle {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .bg-danger-subtle {
+        background-color: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .bg-secondary-subtle {
+        background-color: #f1f5f9;
+        color: #475569;
+    }
+</style>
+
+<div class="page-header mb-4">
+    <a asp-action="Organizer" class="text-decoration-none text-muted mb-3 d-inline-block">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+    </a>
+
+    <div class="d-flex align-items-center justify-content-between gap-3 page-header">
+        <div class="d-flex align-items-center gap-3">
+            @if (!string.IsNullOrEmpty(posterUrl))
+            {
+                <img src="@posterUrl" alt="Event Poster" class="rounded shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+            }
+            else
+            {
+                <div class="bg-light rounded d-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
+                    <i class="fa-solid fa-image text-muted fs-4"></i>
+                </div>
+            }
+            <div>
+                <h3 class="fw-bold mb-1">@eventName</h3>
+                <p class="text-muted mb-0"><i class="fa-solid fa-ticket me-1"></i> Orders Management</p>
+            </div>
+        </div>
+        @{
+            var eventIdForExport = Context.Request.Query["eventId"].ToString();
+        }
+        @if (!string.IsNullOrEmpty(eventIdForExport))
+        {
+            <a asp-action="ExportAttendees" asp-route-eventId="@eventIdForExport"
+               class="btn btn-success btn-sm">
+                <i class="fa-solid fa-file-csv me-1"></i>Export Attendees (CSV)
+            </a>
+        }
+    </div>
+</div>
+
+<div class="order-summary-card d-flex gap-5">
+    <div>
+        <div class="text-muted small fw-bold text-uppercase mb-1">Total Orders</div>
+        <h4 class="fw-bold mb-0">@(Model?.Count ?? 0)</h4>
+    </div>
+    <div>
+        <div class="text-muted small fw-bold text-uppercase mb-1">Total Revenue</div>
+        <h4 class="fw-bold mb-0 text-success">
+            @(Model?.Sum(o => o.FinalAmount).ToString("N0") ?? "0") VNĐ
+        </h4>
+    </div>
+    <div>
+        <div class="text-muted small fw-bold text-uppercase mb-1">Tickets Sold</div>
+        <h4 class="fw-bold mb-0 text-primary">
+            @(Model?.Sum(o => o.Tickets?.Count ?? 0) ?? 0)
+        </h4>
+    </div>
+</div>
+
+<div class="table-card bg-white p-4 shadow-sm" style="border-radius: 16px;">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="text-muted fw-semibold">Order ID</th>
+                    <th class="text-muted fw-semibold">Customer</th>
+                    <th class="text-muted fw-semibold">Date</th>
+                    <th class="text-muted fw-semibold text-center">Tickets</th>
+                    <th class="text-muted fw-semibold text-end">Total Amount</th>
+                    <th class="text-muted fw-semibold text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var order in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold">#@order.OrderId</td>
+                            <td>
+                                <div class="fw-bold text-dark">@(!string.IsNullOrEmpty(order.FullName) ? order.FullName : "N/A")</div>
+                                <div class="small text-muted">
+                                    <i class="fa-regular fa-envelope me-1"></i>@order.Email
+                                </div>
+                                @if (!string.IsNullOrEmpty(order.Phone))
+                                {
+                                    <div class="small text-muted mt-1">
+                                        <i class="fa-solid fa-phone me-1"></i>@order.Phone
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <div class="text-dark">@(order.OrderDate?.ToString("MMM dd, yyyy"))</div>
+                                <div class="small text-muted">@(order.OrderDate?.ToString("HH:mm"))</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border">
+                                    <i class="fa-solid fa-ticket me-1"></i> @(order.Tickets?.Count ?? 0)
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="fw-bold text-success">@order.FinalAmount.ToString("N0") ₫</div>
+                                @if (!string.IsNullOrEmpty(order.PaymentMethod))
+                                {
+                                    <span class="badge bg-light text-secondary border mt-1">@order.PaymentMethod</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (order.Status == "Paid" || order.Status == "Completed")
+                                {
+                                    <span class="status-badge bg-success-subtle">@order.Status</span>
+                                }
+                                else if (order.Status == "Pending")
+                                {
+                                    <span class="status-badge bg-warning-subtle">@order.Status</span>
+                                }
+                                else if (order.Status == "Cancelled" || order.Status == "Failed")
+                                {
+                                    <span class="status-badge bg-danger-subtle">@order.Status</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge bg-secondary-subtle">@(order.Status ?? "Unknown")</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-box-open fa-3x text-muted mb-3 opacity-50"></i>
+                                <h6 class="text-muted fw-bold">No orders found</h6>
+                                <p class="text-muted small mb-0">There are no orders for this event yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

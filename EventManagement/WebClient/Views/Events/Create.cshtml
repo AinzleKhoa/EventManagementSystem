@@ -1,0 +1,824 @@
+@using WebClient.Controllers
+@model WebClient.Controllers.CreateEventViewModel
+@{
+    ViewData["Title"] = "Create Event";
+    Layout = "_LayoutStaff";
+}
+
+<style>
+    .wizard-stepper {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        position: relative;
+        background: white;
+        padding: 1.25rem 2rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    .wizard-step {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+        color: #94a3b8;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 2;
+    }
+    .wizard-step.active {
+        color: #4f46e5;
+    }
+    .wizard-step.completed {
+        color: #10b981;
+    }
+    .step-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+    .wizard-step.active .step-badge {
+        background: #4f46e5;
+        color: white;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .wizard-step.completed .step-badge {
+        background: #10b981;
+        color: white;
+    }
+
+    .card-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04);
+        border: 1px solid #f1f5f9;
+    }
+
+    #map {
+        height: 360px;
+        width: 100%;
+        border-radius: 12px;
+        margin-top: 10px;
+        z-index: 1;
+    }
+
+    .search-container {
+        position: relative;
+    }
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 0 0 10px 10px;
+        max-height: 220px;
+        overflow-y: auto;
+        z-index: 100;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        display: none;
+    }
+    .search-results div {
+        padding: 10px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid #f8fafc;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+    .search-results div:hover {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    /* Live Preview Card */
+    .preview-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        position: sticky;
+        top: 90px;
+    }
+    .preview-card-img {
+        height: 200px;
+        width: 100%;
+        object-fit: cover;
+        background: #f1f5f9;
+    }
+    .preview-badge-cat {
+        background: rgba(79, 70, 229, 0.1);
+        color: #4f46e5;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        text-transform: uppercase;
+    }
+
+    .btn-preset-ticket {
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.4rem 1rem;
+        transition: all 0.2s;
+    }
+    .btn-preset-ticket:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a asp-action="Index" class="text-decoration-none text-muted small fw-500">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Events
+    </a>
+    <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold">
+        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Next-Gen Event Creator
+    </span>
+</div>
+
+<!-- Wizard Stepper -->
+<div class="wizard-stepper">
+    <div class="wizard-step active" id="stepIndicator1" onclick="goToStep(1)">
+        <div class="step-badge"><i class="fa-solid fa-file-pen"></i></div>
+        <div>
+            <div class="small text-uppercase text-muted" style="font-size:0.7rem;">Step 1</div>
+            <div>General Info & Media</div>
+        </div>
+    </div>
+    <div class="wizard-step" id="stepIndicator2" onclick="goToStep(2)">
+        <div class="step-badge"><i class="fa-solid fa-location-dot"></i></div>
+        <div>
+            <div class="small text-uppercase text-muted" style="font-size:0.7rem;">Step 2</div>
+            <div>Schedule & Venue</div>
+        </div>
+    </div>
+    <div class="wizard-step" id="stepIndicator3" onclick="goToStep(3)">
+        <div class="step-badge"><i class="fa-solid fa-ticket"></i></div>
+        <div>
+            <div class="small text-uppercase text-muted" style="font-size:0.7rem;">Step 3</div>
+            <div>Tickets & Pricing</div>
+        </div>
+    </div>
+</div>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" id="eventCreateForm" novalidate>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
+    }
+
+    <div id="stepErrorAlert" class="alert alert-danger alert-dismissible fade show" style="display:none;" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i> <span id="stepErrorText">Please fill in all required fields before proceeding.</span>
+        <button type="button" class="btn-close" onclick="document.getElementById('stepErrorAlert').style.display='none'"></button>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Form Wizard Column -->
+        <div class="col-lg-7 col-xl-8">
+            
+            <!-- STEP 1: General Info & Media -->
+            <div class="step-pane" id="stepPane1">
+                <div class="card-section">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center">
+                        <i class="fa-solid fa-circle-info text-primary me-2"></i> Event Basic Information
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Event Title <span class="text-danger">*</span></label>
+                            <input asp-for="Title" id="inputTitle" class="form-control form-control-lg" placeholder="e.g. Summer Indie Music Festival 2026" maxlength="200" oninput="updateLivePreview()" />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                            <select asp-for="CategoryId" id="selectCategory" class="form-select" onchange="updateLivePreview()">
+                                @foreach (var c in ViewBag.Categories)
+                                {
+                                    <option value="@c.CategoryId">@c.CategoryName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Event Cover Poster</label>
+                            <div class="input-group">
+                                <input asp-for="PosterImage" id="inputPosterFile" type="file" class="form-control" accept="image/*" onchange="previewUploadImage(this)" />
+                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#unsplashModal" title="Pick stock cover">
+                                    <i class="fa-solid fa-images me-1"></i> Stock
+                                </button>
+                            </div>
+                            <input type="hidden" id="inputPosterUrl" name="PosterUrl" />
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label fw-semibold mb-0">Event Description</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="generateAiDescription()">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Auto-Generate Description
+                                </button>
+                            </div>
+                            <textarea asp-for="Description" id="inputDescription" class="form-control" rows="5" placeholder="Write compelling event details, highlights, and schedule..." oninput="updateLivePreview()"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-primary px-4 rounded-pill" onclick="goToStep(2)">
+                        Next: Schedule & Venue <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Schedule & Venue -->
+            <div class="step-pane" id="stepPane2" style="display:none;">
+                <div class="card-section">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center">
+                        <i class="fa-solid fa-clock-stopwatch text-warning me-2"></i> Date & Time Schedule
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Event Start Date & Time <span class="text-danger">*</span></label>
+                            <input asp-for="StartDate" id="inputStartDate" type="datetime-local" class="form-control" value="@DateTime.Now.AddDays(7).ToString("yyyy-MM-ddTHH:mm")" onchange="updateLivePreview()" />
+                            <span asp-validation-for="StartDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Event End Date & Time <span class="text-danger">*</span></label>
+                            <input asp-for="EndDate" id="inputEndDate" type="datetime-local" class="form-control" value="@DateTime.Now.AddDays(7).AddHours(4).ToString("yyyy-MM-ddTHH:mm")" onchange="updateLivePreview()" />
+                            <span asp-validation-for="EndDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3 d-flex align-items-center">
+                        <i class="fa-solid fa-map-location-dot text-danger me-2"></i> Venue & Geocoding Location
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Search Venue Address (Autocomplete & FlyTo)</label>
+                            <div class="search-container mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                    <input type="text" id="searchBox" class="form-control" placeholder="Type venue name or address (e.g. Saigon Exhibition Center, District 7)..." autocomplete="off" />
+                                </div>
+                                <div id="searchResults" class="search-results"></div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="latitudeInput" name="Latitude" />
+                        <input type="hidden" id="longitudeInput" name="Longitude" />
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Confirmed Address Description <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-location-dot text-danger"></i></span>
+                                <input asp-for="Location" id="locationInput" class="form-control" placeholder="Select location on map or search above..." oninput="updateLivePreview()" />
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div id="map"></div>
+                            <small class="text-muted"><i class="fa-solid fa-info-circle me-1"></i> Click anywhere on the interactive map or drag the pin to set precise coordinates.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" onclick="goToStep(1)">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back
+                    </button>
+                    <button type="button" class="btn btn-primary px-4 rounded-pill" onclick="goToStep(3)">
+                        Next: Tickets & Pricing <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Tickets & Pricing -->
+            <div class="step-pane" id="stepPane3" style="display:none;">
+                <div class="card-section">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <h5 class="fw-bold mb-0 d-flex align-items-center">
+                            <i class="fa-solid fa-tags text-success me-2"></i> Ticket Types Configuration
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-success btn-preset-ticket" onclick="addPresetTicket('free')">
+                                <i class="fa-solid fa-gift me-1"></i> + Free Pass
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning btn-preset-ticket text-dark" onclick="addPresetTicket('early')">
+                                <i class="fa-solid fa-bolt me-1"></i> + Early Bird
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-preset-ticket" onclick="addPresetTicket('vip')">
+                                <i class="fa-solid fa-crown me-1"></i> + VIP Pass
+                            </button>
+                            <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" onclick="addTicketRow()">
+                                <i class="fa-solid fa-plus me-1"></i> Custom Row
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="min-width: 140px;">Ticket Name <span class="text-danger">*</span></th>
+                                    <th style="min-width: 110px;">Price (VND)</th>
+                                    <th style="min-width: 80px;">Qty</th>
+                                    <th style="min-width: 60px;">Badge</th>
+                                    <th style="min-width: 150px;">Sale Start</th>
+                                    <th style="min-width: 150px;">Sale End</th>
+                                    <th style="width: 40px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="ticketList">
+                                <tr>
+                                    <td><input name="TicketTypes[0].TypeName" class="form-control form-control-sm" required maxlength="100" placeholder="Standard Ticket" value="Standard Pass" oninput="updateLivePreview()" /></td>
+                                    <td><input name="TicketTypes[0].Price" type="number" class="form-control form-control-sm" value="150000" min="0" max="100000000" oninput="updateLivePreview()" /></td>
+                                    <td><input name="TicketTypes[0].Quantity" type="number" class="form-control form-control-sm" value="100" min="1" max="100000" /></td>
+                                    <td><input name="TicketTypes[0].ColorCode" type="color" class="form-control form-control-color w-100" value="#4f46e5" /></td>
+                                    <td><input name="TicketTypes[0].SaleStartDate" type="datetime-local" class="form-control form-control-sm" /></td>
+                                    <td><input name="TicketTypes[0].SaleEndDate" type="datetime-local" class="form-control form-control-sm" /></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" onclick="goToStep(2)">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back
+                    </button>
+                    <button type="submit" class="btn btn-success px-5 py-2.5 rounded-pill fw-bold shadow-sm">
+                        <i class="fa-solid fa-paper-plane me-2"></i> Create Event Now
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Side Live Preview Panel -->
+        <div class="col-lg-5 col-xl-4">
+            <div class="preview-card">
+                <div class="position-relative">
+                    <img id="livePreviewImg" src="https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80" class="preview-card-img" alt="Live Preview" />
+                    <span id="livePreviewCat" class="preview-badge-cat position-absolute top-0 start-0 m-3 shadow-sm">Category</span>
+                </div>
+                <div class="p-3">
+                    <div id="livePreviewDate" class="text-danger fw-bold small text-uppercase mb-1">
+                        <i class="fa-regular fa-calendar me-1"></i> Sat, Aug 15 • 19:00
+                    </div>
+                    <h5 id="livePreviewTitle" class="fw-bold mb-2 text-dark">Event Title Placeholder</h5>
+                    <div id="livePreviewLocation" class="text-muted small mb-3">
+                        <i class="fa-solid fa-location-dot text-danger me-1"></i> Venue location will appear here...
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="text-muted small">Starting Price</span>
+                        <span id="livePreviewPrice" class="fw-bold text-success fs-5">150,000 ₫</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Stock Covers Modal -->
+<div class="modal fade" id="unsplashModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-images text-primary me-2"></i> Select Stock Cover Poster</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80" class="img-fluid rounded border cursor-pointer hover-shadow" onclick="selectStockCover(this.src)" alt="Music" />
+                        <div class="text-center small fw-semibold mt-1">Concert & DJ Night</div>
+                    </div>
+                    <div class="col-md-4">
+                        <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80" class="img-fluid rounded border cursor-pointer hover-shadow" onclick="selectStockCover(this.src)" alt="Tech" />
+                        <div class="text-center small fw-semibold mt-1">Tech & Conference</div>
+                    </div>
+                    <div class="col-md-4">
+                        <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80" class="img-fluid rounded border cursor-pointer hover-shadow" onclick="selectStockCover(this.src)" alt="Workshop" />
+                        <div class="text-center small fw-semibold mt-1">Business & Workshop</div>
+                    </div>
+                    <div class="col-md-4">
+                        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80" class="img-fluid rounded border cursor-pointer hover-shadow" onclick="selectStockCover(this.src)" alt="Food" />
+                        <div class="text-center small fw-semibold mt-1">Food & Beverage</div>
+                    </div>
+                    <div class="col-md-4">
+                        <img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=600&q=80" class="img-fluid rounded border cursor-pointer hover-shadow" onclick="selectStockCover(this.src)" alt="Sports" />
+                        <div class="text-center small fw-semibold mt-1">Sports & Marathon</div>
+                    </div>
+                    <div class="col-md-4">
+                        <img src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=600&q=80" class="img-fluid rounded border cursor-pointer hover-shadow" onclick="selectStockCover(this.src)" alt="Party" />
+                        <div class="text-center small fw-semibold mt-1">Festival & Nightlife</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        let currentStep = 1;
+        var defaultLat = 10.7769;
+        var defaultLng = 106.7009;
+        var map, marker;
+        let ticketIdx = 1;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initLeafletMap();
+            initAddressSearch();
+            updateLivePreview();
+            initFormValidation();
+        });
+
+        function hideErrorAlert() {
+            const errDiv = document.getElementById('stepErrorAlert');
+            if (errDiv) errDiv.style.display = 'none';
+        }
+
+        function showErrorAlert(msg) {
+            const errDiv = document.getElementById('stepErrorAlert');
+            const errText = document.getElementById('stepErrorText');
+            if (errDiv && errText) {
+                errText.innerText = msg;
+                errDiv.style.display = 'block';
+                errDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function validateStep1() {
+            hideErrorAlert();
+            const titleInput = document.getElementById('inputTitle');
+            if (!titleInput || !titleInput.value.trim() || titleInput.value.trim().length < 3) {
+                titleInput.classList.add('is-invalid');
+                showErrorAlert('Event Title is required and must be at least 3 characters long.');
+                titleInput.focus();
+                return false;
+            }
+            titleInput.classList.remove('is-invalid');
+            return true;
+        }
+
+        function validateStep2() {
+            hideErrorAlert();
+            const startInput = document.getElementById('inputStartDate');
+            const endInput = document.getElementById('inputEndDate');
+            const locationInput = document.getElementById('locationInput');
+
+            if (!startInput || !startInput.value) {
+                startInput.classList.add('is-invalid');
+                showErrorAlert('Event Start Date & Time is required.');
+                startInput.focus();
+                return false;
+            }
+            
+            const now = new Date();
+            if (new Date(startInput.value) <= now) {
+                startInput.classList.add('is-invalid');
+                showErrorAlert('Event Start Date & Time must be in the future.');
+                startInput.focus();
+                return false;
+            }
+            startInput.classList.remove('is-invalid');
+
+            if (!endInput || !endInput.value) {
+                endInput.classList.add('is-invalid');
+                showErrorAlert('Event End Date & Time is required.');
+                endInput.focus();
+                return false;
+            }
+
+            if (new Date(endInput.value) <= new Date(startInput.value)) {
+                endInput.classList.add('is-invalid');
+                showErrorAlert('Event End Date & Time must be after Start Date & Time.');
+                endInput.focus();
+                return false;
+            }
+            endInput.classList.remove('is-invalid');
+
+            if (!locationInput || !locationInput.value.trim()) {
+                locationInput.classList.add('is-invalid');
+                showErrorAlert('Venue Location address is required. Please search or pick a spot on the map.');
+                locationInput.focus();
+                return false;
+            }
+            locationInput.classList.remove('is-invalid');
+
+            return true;
+        }
+
+        function validateStep3() {
+            hideErrorAlert();
+            const ticketRows = document.querySelectorAll('#ticketList tr');
+            if (ticketRows.length === 0) {
+                showErrorAlert('At least one Ticket Type is required for the event.');
+                return false;
+            }
+
+            const endDateVal = document.getElementById('inputEndDate').value;
+            const eventEnd = endDateVal ? new Date(endDateVal) : null;
+
+            for (let i = 0; i < ticketRows.length; i++) {
+                const row = ticketRows[i];
+                const nameInp = row.querySelector('input[name*="TypeName"]');
+                const priceInp = row.querySelector('input[name*="Price"]');
+                const qtyInp = row.querySelector('input[name*="Quantity"]');
+                const saleStartInp = row.querySelector('input[name*="SaleStartDate"]');
+                const saleEndInp = row.querySelector('input[name*="SaleEndDate"]');
+
+                if (nameInp && !nameInp.value.trim()) {
+                    nameInp.classList.add('is-invalid');
+                    showErrorAlert(`Ticket #${i + 1}: Ticket Name is required.`);
+                    nameInp.focus();
+                    return false;
+                } else if (nameInp) nameInp.classList.remove('is-invalid');
+
+                if (priceInp && (isNaN(priceInp.value) || Number(priceInp.value) < 0)) {
+                    priceInp.classList.add('is-invalid');
+                    showErrorAlert(`Ticket #${i + 1}: Price must be >= 0.`);
+                    priceInp.focus();
+                    return false;
+                } else if (priceInp) priceInp.classList.remove('is-invalid');
+
+                if (qtyInp && (isNaN(qtyInp.value) || Number(qtyInp.value) < 1)) {
+                    qtyInp.classList.add('is-invalid');
+                    showErrorAlert(`Ticket #${i + 1}: Quantity must be at least 1.`);
+                    qtyInp.focus();
+                    return false;
+                } else if (qtyInp) qtyInp.classList.remove('is-invalid');
+
+                const saleStart = saleStartInp && saleStartInp.value ? new Date(saleStartInp.value) : null;
+                const saleEnd = saleEndInp && saleEndInp.value ? new Date(saleEndInp.value) : null;
+
+                if (saleStart && eventEnd && saleStart >= eventEnd) {
+                    saleStartInp.classList.add('is-invalid');
+                    showErrorAlert(`Ticket #${i + 1}: Sale Start Date must be before Event End Date.`);
+                    saleStartInp.focus();
+                    return false;
+                } else if (saleStartInp) saleStartInp.classList.remove('is-invalid');
+
+                if (saleStart && saleEnd && saleEnd <= saleStart) {
+                    saleEndInp.classList.add('is-invalid');
+                    showErrorAlert(`Ticket #${i + 1}: Sale End Date must be after Sale Start Date.`);
+                    saleEndInp.focus();
+                    return false;
+                } else if (saleEndInp) saleEndInp.classList.remove('is-invalid');
+
+                if (eventEnd && saleEnd && saleEnd > eventEnd) {
+                    saleEndInp.classList.add('is-invalid');
+                    showErrorAlert(`Ticket #${i + 1}: Sale End Date cannot be after Event End Date.`);
+                    saleEndInp.focus();
+                    return false;
+                } else if (saleEndInp) saleEndInp.classList.remove('is-invalid');
+            }
+            return true;
+        }
+
+        function goToStep(targetStep) {
+            if (targetStep > currentStep) {
+                if (currentStep <= 1 && targetStep > 1) {
+                    if (!validateStep1()) return;
+                }
+                if (currentStep <= 2 && targetStep > 2) {
+                    if (!validateStep2()) return;
+                }
+            }
+
+            hideErrorAlert();
+            currentStep = targetStep;
+
+            document.querySelectorAll('.step-pane').forEach(el => el.style.display = 'none');
+            document.getElementById('stepPane' + targetStep).style.display = 'block';
+
+            document.querySelectorAll('.wizard-step').forEach((el, index) => {
+                const stepNum = index + 1;
+                el.classList.remove('active', 'completed');
+                if (stepNum === targetStep) el.classList.add('active');
+                else if (stepNum < targetStep) el.classList.add('completed');
+            });
+
+            if (targetStep === 2 && map) {
+                setTimeout(() => map.invalidateSize(), 250);
+            }
+        }
+
+        function updateLivePreview() {
+            const title = document.getElementById('inputTitle').value || 'Event Title Placeholder';
+            document.getElementById('livePreviewTitle').innerText = title;
+
+            const categorySelect = document.getElementById('selectCategory');
+            if (categorySelect && categorySelect.options.length > 0) {
+                const catText = categorySelect.options[categorySelect.selectedIndex].text;
+                document.getElementById('livePreviewCat').innerText = catText;
+            }
+
+            const location = document.getElementById('locationInput').value || 'Venue location will appear here...';
+            document.getElementById('livePreviewLocation').innerHTML = `<i class="fa-solid fa-location-dot text-danger me-1"></i> ${location}`;
+
+            const startDateVal = document.getElementById('inputStartDate').value;
+            if (startDateVal) {
+                const d = new Date(startDateVal);
+                document.getElementById('livePreviewDate').innerHTML = `<i class="fa-regular fa-calendar me-1"></i> ${d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+            }
+
+            const priceInputs = document.querySelectorAll('#ticketList input[name*=".Price"]');
+            let minPrice = Infinity;
+            priceInputs.forEach(inp => {
+                const val = parseFloat(inp.value);
+                if (!isNaN(val) && val < minPrice) minPrice = val;
+            });
+
+            if (minPrice === Infinity) {
+                document.getElementById('livePreviewPrice').innerText = 'Contact';
+            } else if (minPrice === 0) {
+                document.getElementById('livePreviewPrice').innerText = 'FREE';
+            } else {
+                document.getElementById('livePreviewPrice').innerText = minPrice.toLocaleString('vi-VN') + ' ₫';
+            }
+        }
+
+        function previewUploadImage(input) {
+            if (input.files && input.files[0]) {
+                const url = URL.createObjectURL(input.files[0]);
+                document.getElementById('livePreviewImg').src = url;
+                document.getElementById('inputPosterUrl').value = '';
+            }
+        }
+
+        function selectStockCover(url) {
+            document.getElementById('livePreviewImg').src = url;
+            document.getElementById('inputPosterUrl').value = url;
+            bootstrap.Modal.getInstance(document.getElementById('unsplashModal')).hide();
+        }
+
+        function generateAiDescription() {
+            const title = document.getElementById('inputTitle').value || 'Upcoming Event';
+            const catSelect = document.getElementById('selectCategory');
+            const catName = catSelect ? catSelect.options[catSelect.selectedIndex].text : 'Special';
+
+            const generated = `🎉 Welcome to ${title}!
+
+Join us for an unmissable ${catName} experience bringing together enthusiasts, experts, and great vibes.
+
+✨ Event Highlights:
+• Live performances & interactive sessions
+• Networking opportunities with industry leaders
+• Exclusive merchandise and gifts for attendees
+
+📌 Agenda & Important Info:
+- Please present your digital QR ticket at the check-in desk.
+- Doors open 30 minutes prior to the official start time.
+
+Get your tickets now before they sell out!`;
+
+            document.getElementById('inputDescription').value = generated;
+            updateLivePreview();
+        }
+
+        function addPresetTicket(type) {
+            const startVal = document.getElementById('inputStartDate').value;
+            const endVal = document.getElementById('inputEndDate').value;
+
+            if (type === 'free') {
+                createTicketRowObj("General Admission (Free)", 0, 100, "#10b981", startVal, endVal);
+            } else if (type === 'early') {
+                createTicketRowObj("Early Bird Discount", 100000, 50, "#f59e0b", startVal, endVal);
+            } else if (type === 'vip') {
+                createTicketRowObj("VIP FanZone Pass", 500000, 30, "#8b5cf6", startVal, endVal);
+            }
+        }
+
+        function createTicketRowObj(name, price, qty, color, start, end) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+            <td><input name="TicketTypes[${ticketIdx}].TypeName" value="${name}" class="form-control form-control-sm" required maxlength="100" oninput="updateLivePreview()" /></td>
+            <td><input name="TicketTypes[${ticketIdx}].Price" type="number" value="${price}" class="form-control form-control-sm" min="0" max="100000000" oninput="updateLivePreview()" /></td>
+            <td><input name="TicketTypes[${ticketIdx}].Quantity" type="number" value="${qty}" class="form-control form-control-sm" min="1" max="100000" /></td>
+            <td><input name="TicketTypes[${ticketIdx}].ColorCode" type="color" value="${color}" class="form-control form-control-color w-100" /></td>
+            <td><input name="TicketTypes[${ticketIdx}].SaleStartDate" type="datetime-local" value="${start}" class="form-control form-control-sm" /></td>
+            <td><input name="TicketTypes[${ticketIdx}].SaleEndDate" type="datetime-local" value="${end}" class="form-control form-control-sm" /></td>
+            <td><button type="button" class="btn text-danger btn-sm" onclick="this.closest('tr').remove(); updateLivePreview();"><i class="fa fa-trash"></i></button></td>
+            `;
+            document.getElementById('ticketList').appendChild(row);
+            ticketIdx++;
+            updateLivePreview();
+        }
+
+        function addTicketRow() {
+            createTicketRowObj("Standard Pass", 150000, 100, "#3b82f6", "", "");
+        }
+
+        function initLeafletMap() {
+            map = L.map('map').setView([defaultLat, defaultLng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+            updateCoordinates(defaultLat, defaultLng);
+
+            marker.on('dragend', function() {
+                var pos = marker.getLatLng();
+                updateCoordinates(pos.lat, pos.lng);
+            });
+
+            map.on('click', function(e) {
+                marker.setLatLng(e.latlng);
+                updateCoordinates(e.latlng.lat, e.latlng.lng);
+            });
+        }
+
+        function initAddressSearch() {
+            const searchBox = document.getElementById('searchBox');
+            const searchResults = document.getElementById('searchResults');
+            if (searchBox && searchResults) {
+                let timer;
+                searchBox.addEventListener('input', function() {
+                    clearTimeout(timer);
+                    const q = this.value.trim();
+                    if (q.length < 3) {
+                        searchResults.style.display = 'none';
+                        return;
+                    }
+                    timer = setTimeout(function() {
+                        fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=vn&q=' + encodeURIComponent(q))
+                            .then(res => res.json())
+                            .then(data => {
+                                searchResults.innerHTML = '';
+                                if (data && data.length > 0) {
+                                    searchResults.style.display = 'block';
+                                    data.slice(0, 5).forEach(item => {
+                                        const div = document.createElement('div');
+                                        div.innerText = item.display_name;
+                                        div.onclick = function() {
+                                            const itemLat = parseFloat(item.lat);
+                                            const itemLon = parseFloat(item.lon);
+                                            map.flyTo([itemLat, itemLon], 16);
+                                            marker.setLatLng([itemLat, itemLon]);
+                                            updateCoordinates(itemLat, itemLon);
+                                            searchResults.style.display = 'none';
+                                        };
+                                        searchResults.appendChild(div);
+                                    });
+                                } else {
+                                    searchResults.style.display = 'none';
+                                }
+                            }).catch(() => { searchResults.style.display = 'none'; });
+                    }, 400);
+                });
+            }
+        }
+
+        function updateCoordinates(lat, lng) {
+            document.getElementById('latitudeInput').value = lat.toFixed(8);
+            document.getElementById('longitudeInput').value = lng.toFixed(8);
+
+            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.display_name) {
+                        document.getElementById('locationInput').value = data.display_name;
+                        updateLivePreview();
+                    }
+                }).catch(err => console.error(err));
+        }
+
+        function initFormValidation() {
+            const form = document.getElementById('eventCreateForm');
+            if (!form) return;
+
+            form.addEventListener('submit', function(e) {
+                if (!validateStep1()) {
+                    e.preventDefault();
+                    goToStep(1);
+                    return;
+                }
+                if (!validateStep2()) {
+                    e.preventDefault();
+                    goToStep(2);
+                    return;
+                }
+                if (!validateStep3()) {
+                    e.preventDefault();
+                    goToStep(3);
+                    return;
+                }
+            });
+        }
+    </script>
+}

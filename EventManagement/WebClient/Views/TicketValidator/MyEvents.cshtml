@@ -1,0 +1,122 @@
+@model List<WebClient.DTOs.Response.ReadEventDTO>
+@{
+    ViewData["Title"] = "My Events";
+    Layout = "_LayoutStaff";
+}
+<style>
+    .event-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+        .event-card:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+            transform: translateY(-4px);
+        }
+
+    .event-info {
+        background: #f8fafc;
+        padding: 12px;
+        border-radius: 6px;
+    }
+
+    .info-row {
+        display: flex;
+        align-items: center;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+    }
+</style>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-2">
+                <i class="bi bi-calendar-check"></i> Assigned Events to Manage
+            </h1>
+            <p class="text-muted">List of events you are assigned as a validator</p>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Count > 0)
+    {
+        <div class="row">
+            @foreach (var eventItem in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 event-card">
+                        @if (!string.IsNullOrEmpty(eventItem.PosterUrl))
+                        {
+                            <img src="@eventItem.PosterUrl" class="card-img-top" alt="@eventItem.Title" style="height: 200px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="placeholder-img" style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-image" style="font-size: 3rem; color: white;"></i>
+                            </div>
+                        }
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@eventItem.Title</h5>
+
+                            <div class="mb-3">
+                                <span class="badge bg-info">@eventItem.Status</span>
+                            </div>
+
+                            <div class="event-info mb-3">
+                                <div class="info-row mb-2">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span class="ms-2">
+                                        @eventItem.StartDate.ToString("dd/MM/yyyy HH:mm")
+                                        - @eventItem.EndDate.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+                                </div>
+
+                                <div class="info-row">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span class="ms-2">@eventItem.Location</span>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(eventItem.Description))
+                            {
+                                <p class="card-text text-muted small">
+                                    @(eventItem.Description.Length > 100 ? eventItem.Description.Substring(0, 100) + "..." : eventItem.Description)
+                                </p>
+                            }
+
+                            <div class="mt-auto d-flex flex-column gap-2">
+                                <a asp-controller="TicketValidator" asp-action="EventTickets" asp-route-eventId="@eventItem.EventId"
+                                   class="btn btn-primary btn-sm w-100">
+                                    <i class="bi bi-ticket-perforated me-1"></i>View Tickets
+                                </a>
+                                <div class="d-flex gap-2">
+                                    <a asp-controller="TicketValidator" asp-action="Statistics" asp-route-eventId="@eventItem.EventId"
+                                       class="btn btn-outline-success btn-sm flex-grow-1">
+                                        <i class="bi bi-bar-chart me-1"></i>Statistics
+                                    </a>
+                                    <a asp-controller="TicketValidator" asp-action="CheckIn"
+                                       class="btn btn-outline-primary btn-sm flex-grow-1">
+                                        <i class="bi bi-qr-code-scan me-1"></i>Check-In
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> No events available to display.
+        </div>
+    }
+</div>

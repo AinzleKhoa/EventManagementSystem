@@ -1,0 +1,263 @@
+@model WebClient.DTOs.Response.AdminDashBoardResponseDTO
+
+@{
+    ViewData["Title"] = "Administration System - Dashboard";
+    Layout = "_LayoutAdmin";
+}
+
+<style>
+    :root {
+        --primary-color: #6366f1;
+    }
+
+    /* Top Bar */
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .btn-create {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.7rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        transition: 0.3s;
+        text-decoration: none;
+    }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            background-color: #4f46e5;
+            color: white;
+        }
+
+    /* Stats Cards */
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        height: 100%;
+        transition: 0.3s;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .bg-icon-primary {
+        background: #e0e7ff;
+        color: #6366f1;
+    }
+
+    .bg-icon-success {
+        background: #dcfce7;
+        color: #10b981;
+    }
+
+    .bg-icon-warning {
+        background: #fef3c7;
+        color: #f59e0b;
+    }
+
+    .bg-icon-info {
+        background: #e0f2fe;
+        color: #0ea5e9;
+    }
+
+    /* Tables */
+    .table-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-published {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        transition: 0.2s;
+        text-decoration: none;
+    }
+
+        .action-btn:hover {
+            background: #f1f5f9;
+            color: var(--primary-color);
+        }
+</style>
+
+<div>
+    <header class="top-bar">
+        <div>
+            <h3 class="fw-bold mb-1">Admin Dashboard</h3>
+            <p class="text-secondary mb-0">Welcome back, system is running smoothly 👋</p>
+        </div>
+    </header>
+
+    <div class="row g-4 mb-5">
+        @* <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-icon-success">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase">Total Withdrawal</h6>
+                <h3 class="fw-bold mb-0">@Model.TotalWithdrawal.ToString("N0") <small style="font-size: 0.5em">VND</small></h3>
+                <small class="text-success"><i class="fa-solid fa-check-circle me-1"></i>Settled</small>
+            </div>
+        </div> *@
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-icon-primary">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase">Customers</h6>
+                <h3 class="fw-bold mb-0">@Model.TotalCustomers.ToString("N0")</h3>
+                <small class="text-muted">Total registered users</small>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-icon-info">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase">Total Events</h6>
+                <h3 class="fw-bold mb-0">@Model.TotalEvents</h3>
+                <small class="text-muted">All statuses</small>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-icon-warning">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase">Public Events</h6>
+                <h3 class="fw-bold mb-0">@Model.TotalPublicEvents</h3>
+                <small class="text-success fw-bold">Currently live</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="table-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Top 5 Best Selling Events</h5>
+                    <a asp-controller="AdminEvents" asp-action="All" class="text-decoration-none small fw-bold text-primary">View All</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover border-top">
+                        <thead>
+                            <tr class="text-muted">
+                                <th>Event Information</th>
+                                <th class="text-center">Tickets Sold</th>
+                                <th class="text-end">Estimated Revenue</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Top5SellingEvents != null && Model.Top5SellingEvents.Any())
+                            {
+                                foreach (var item in Model.Top5SellingEvents)
+                                {
+                                    var totalTicketsSold = item.TicketTypes?.Sum(t => t.SoldQuantity) ?? 0;
+                                    var estimatedRevenue = item.TicketTypes?.Sum(t => (decimal)t.SoldQuantity * t.Price) ?? 0;
+
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-light rounded p-2 me-3 text-primary">
+                                                    @if (!string.IsNullOrEmpty(item.PosterUrl))
+                                                    {
+                                                        <img src="@item.PosterUrl" style="width: 32px; height: 32px; object-fit: cover; border-radius: 4px;" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fa-solid fa-calendar-star"></i>
+                                                    }
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-truncate" style="max-width: 250px;">@item.Title</div>
+                                                    <small class="text-muted">ID: #@item.EventId | @item.CategoryName</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center fw-bold text-primary">
+                                            @totalTicketsSold.ToString("N0") <small>vé</small>
+                                        </td>
+                                        <td class="text-end fw-bold text-success">
+                                            @estimatedRevenue.ToString("N0") <small>VND</small>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.Status == "Approved")
+                                            {
+                                                <span class="status-badge status-published">Đang bán</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-dark">@item.Status</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted font-italic">
+                                        <i class="fa-solid fa-inbox d-block mb-2 fs-3"></i>
+                                        Không có dữ liệu sự kiện bán chạy.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/common/toast.js"></script>
+}
